@@ -1,0 +1,42 @@
+{
+    "name": "neuron-php/cli",
+    "description": "Unified command-line interface for the Neuron PHP framework",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Lee Jones",
+            "email": "lee@dragonflyrg.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": "^8.4",
+        "neuron-php/application": "^0.6",
+        "neuron-php/core": "^0.7",
+        "neuron-php/patterns": "^0.7",
+        "symfony/yaml": "^6.0|^7.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0",
+        "phpmd/phpmd": "^2.15"
+    },
+    "autoload": {
+        "psr-4": {
+            "Neuron\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "bin": [
+        "bin/neuron"
+    ],
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}
