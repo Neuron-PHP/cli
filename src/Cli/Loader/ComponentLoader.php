@@ -101,27 +101,8 @@ class ComponentLoader
 		
 		try
 		{
-			// Create a simple wrapper application for registration
-			$app = new class( $this->registry ) {
-				private Registry $registry;
-				
-				public function __construct( Registry $registry )
-				{
-					$this->registry = $registry;
-				}
-				
-				public function register( string $name, string $class ): void
-				{
-					// Silently skip if already registered
-					if( !$this->registry->has( $name ) )
-					{
-						$this->registry->register( $name, $class );
-					}
-				}
-			};
-			
-			// Call the static register method
-			$providerClass::register( $app );
+			// Call the static register method with the registry directly
+			$providerClass::register( $this->registry );
 			
 			$this->loadedProviders[] = $providerClass;
 			
