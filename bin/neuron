@@ -1,0 +1,75 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Neuron CLI - Command-line interface for the Neuron PHP framework
+ *
+ * This script serves as the entry point for the Neuron CLI tool.
+ * It can be installed globally via Composer or run locally.
+ */
+
+// Find and load the autoloader
+$autoloaderPaths = [
+	// When installed globally via Composer
+	__DIR__ . '/../../../autoload.php',
+	// When in development or installed as a dependency
+	__DIR__ . '/../vendor/autoload.php',
+	// When installed in a project
+	__DIR__ . '/../../../../vendor/autoload.php',
+	// Alternative paths
+	dirname( __DIR__, 3 ) . '/vendor/autoload.php',
+	dirname( __DIR__, 4 ) . '/vendor/autoload.php',
+];
+
+$autoloaderFound = false;
+foreach( $autoloaderPaths as $path )
+{
+	if( file_exists( $path ) )
+	{
+		require_once $path;
+		$autoloaderFound = true;
+		break;
+	}
+}
+
+if( !$autoloaderFound )
+{
+	fwrite( STDERR, "Error: Unable to find Composer autoloader.\n" );
+	fwrite( STDERR, "Please run 'composer install' to install dependencies.\n" );
+	exit( 1 );
+}
+
+// Check PHP version
+if( version_compare( PHP_VERSION, '8.4.0', '<' ) )
+{
+	fwrite( STDERR, "Error: Neuron CLI requires PHP 8.4 or higher.\n" );
+	fwrite( STDERR, "Current PHP version: " . PHP_VERSION . "\n" );
+	exit( 1 );
+}
+
+// Create and run the application
+try
+{
+	$app = new \Neuron\Cli\Application( '0.1.0' );
+
+	// Pass command-line arguments to the application
+	$app->run( $argv );
+	
+	// Get the exit code from command execution
+	$exitCode = $app->getExitCode();
+
+	exit( $exitCode );
+}
+catch( \Exception $e )
+{
+	fwrite( STDERR, "Fatal error: " . $e->getMessage() . "\n" );
+
+	// If verbose mode is enabled, show the stack trace
+	if( in_array( '--verbose', $argv ) || in_array( '-v', $argv ) )
+	{
+		fwrite( STDERR, "\nStack trace:\n" );
+		fwrite( STDERR, $e->getTraceAsString() . "\n" );
+	}
+
+	exit( 1 );
+}
