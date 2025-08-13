@@ -575,7 +575,7 @@ When adding new features to the CLI component:
 2. Add tests in the `tests/` directory
 3. Update this README with new features
 4. Follow PSR-4 naming conventions
-5. Use the existing code style (tabs, PascalCase properties)
+5. Use the existing code style (tabs, spaces etc)
 
 ## License
 
