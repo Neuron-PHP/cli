@@ -1,3 +1,4 @@
+[![CI](https://github.com/Neuron-PHP/cli/actions/workflows/ci.yml/badge.svg)](https://github.com/Neuron-PHP/cli/actions)
 # Neuron CLI Component
 
 A unified command-line interface for the Neuron PHP framework that provides a modern, extensible CLI tool for all Neuron components.
