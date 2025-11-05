@@ -11,9 +11,44 @@ use Neuron\Data\Setting\Source\ISettingSource;
 use Neuron\Log\Log;
 
 /**
- * Main CLI application class for the Neuron framework.
- * Extends CommandLineBase to leverage existing CLI infrastructure
- * while adding modern command patterns and component discovery.
+ * Comprehensive CLI application framework for the Neuron ecosystem.
+ * 
+ * This class serves as the central command-line interface for all Neuron
+ * framework components, providing unified command discovery, registration,
+ * execution, and management. It extends the base application framework
+ * to provide CLI-specific functionality with automatic component loading
+ * and modern command pattern implementation.
+ * 
+ * Key features:
+ * - Automatic component discovery and command registration
+ * - Extensible command registry with namespace support
+ * - Rich console I/O with formatting and progress indicators
+ * - Global option handling (--help, --version, --verbose)
+ * - Error handling with detailed debugging information
+ * - Exit code management for scripting integration
+ * - Component isolation and lazy loading
+ * 
+ * The application supports both core framework commands and component-specific
+ * commands, enabling a unified CLI experience across all Neuron modules.
+ * Commands are automatically discovered from installed components and
+ * registered with namespace prefixes (e.g., cms:init, mvc:routes).
+ * 
+ * @package Neuron\Cli
+ * 
+ * @example
+ * ```php
+ * // Basic CLI application setup
+ * $app = new Application('1.0.0');
+ * 
+ * // Register custom command
+ * $app->register('deploy:staging', DeployStagingCommand::class);
+ * 
+ * // Run the application
+ * $app->run();
+ * 
+ * // Get exit code for scripting
+ * exit($app->getExitCode());
+ * ```
  */
 class Application extends Base
 {
@@ -226,12 +261,13 @@ class Application extends Base
 	 * 
 	 * @return void
 	 */
-	private function registerCoreCommands(): void
-	{
-		$this->register( 'help', Commands\Core\HelpCommand::class );
-		$this->register( 'version', Commands\Core\VersionCommand::class );
-		$this->register( 'list', Commands\Core\ComponentListCommand::class );
-	}
+    private function registerCoreCommands(): void
+    {
+        $this->register( 'help', Commands\Core\HelpCommand::class );
+        $this->register( 'version', Commands\Core\VersionCommand::class );
+        $this->register( 'list', Commands\Core\ComponentListCommand::class );
+        $this->register( 'config:env', Commands\Core\ConfigEnvCommand::class );
+    }
 
 	/**
 	 * Show general help information

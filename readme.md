@@ -1,3 +1,4 @@
+[![CI](https://github.com/Neuron-PHP/cli/actions/workflows/ci.yml/badge.svg)](https://github.com/Neuron-PHP/cli/actions)
 # Neuron CLI Component
 
 A unified command-line interface for the Neuron PHP framework that provides a modern, extensible CLI tool for all Neuron components.
@@ -9,13 +10,11 @@ A unified command-line interface for the Neuron PHP framework that provides a mo
 -  **Rich Terminal Output** - Colored output, tables, and progress bars
 -  **Zero Configuration** - Works out of the box with any Neuron component
 -  **Extensible Architecture** - Easy to add custom commands
-- ️ **Built on Solid Foundation** - Extends Neuron's CommandLineBase for consistency
 
 ## Requirements
 
 - PHP 8.4 or higher
 - Composer
-- Neuron Application component
 
 ## Installation
 
@@ -59,18 +58,28 @@ neuron --help
 neuron help make:controller
 ```
 
-### Run Commands
+## Config Export
+
+Export a YAML config as environment-style pairs for production.
 
 ```bash
-# Run a command
-neuron make:controller UserController
+# Export project config to .env production file
+./vendor/bin/neuron config:env --config=config/config.yaml > .env.production
 
-# With options
-neuron make:controller UserController --resource
+# Only export selected categories
+./vendor/bin/neuron config:env --category=site,cache
 
-# With verbose output
-neuron make:controller UserController -v
+# Shell format (export lines)
+./vendor/bin/neuron config:env --format=shell
+
+# Quoting control: auto|always|never (default: auto)
+./vendor/bin/neuron config:env --quote=always
 ```
+
+Notes:
+- Keys become UPPER_SNAKE_CASE using `CATEGORY_NAME` from YAML.
+- Nested and array values are flattened (e.g., `ARRAY_KEY_0`, `ARRAY_KEY_1`).
+- Booleans and nulls are stringified appropriately for env files.
 
 ## For Component Developers
 
@@ -234,6 +243,7 @@ class MakeControllerCommand extends Command
 | `help` | Display help for a command | `neuron help [command]` |
 | `list` | List all available commands | `neuron list` |
 | `version` | Show version information | `neuron version [--verbose]` |
+| `config:env` | Export config.yaml as KEY=VALUE pairs | `neuron config:env [--config=...] [--category=...] [--format=dotenv|shell] [--quote=...]` |
 
 ## Output Helpers
 
@@ -432,83 +442,6 @@ This automatic discovery means:
 - Commands available immediately after component installation
 - Clean separation between components
 - No conflicts between component commands
-
-## Example Implementations
-
-### MVC Component Commands
-
-```php
-class RoutesListCommand extends Command
-{
-    public function getName(): string
-    {
-        return 'routes:list';
-    }
-    
-    public function getDescription(): string
-    {
-        return 'Display all registered routes';
-    }
-    
-    public function execute(): int
-    {
-        $routes = $this->getRoutes(); // Your logic here
-        
-        $this->output->table(
-            ['Method', 'Path', 'Controller', 'Action'],
-            $routes
-        );
-        
-        return 0;
-    }
-}
-```
-
-### CMS Component Commands
-
-```php
-class InitCommand extends Command
-{
-    public function getName(): string
-    {
-        return 'cms:init';
-    }
-    
-    public function getDescription(): string
-    {
-        return 'Initialize CMS structure';
-    }
-    
-    public function configure(): void
-    {
-        $this->addOption('theme', null, true, 'Initial theme', 'default');
-        $this->addOption('with-sample', null, false, 'Include sample content');
-    }
-    
-    public function execute(): int
-    {
-        $theme = $this->input->getOption('theme');
-        
-        $this->output->title('CMS Initialization');
-        
-        // Create directories
-        $this->output->info('Creating directory structure...');
-        // ... implementation
-        
-        // Install theme
-        $this->output->info("Installing theme: {$theme}");
-        // ... implementation
-        
-        if ($this->input->getOption('with-sample')) {
-            $this->output->info('Adding sample content...');
-            // ... implementation
-        }
-        
-        $this->output->success('CMS initialized successfully!');
-        return 0;
-    }
-}
-```
 
 ## Error Handling
 
