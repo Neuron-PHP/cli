@@ -1,4 +1,4 @@
-## 0.8.1
+## 0.8.1 2025-11-04
 
 * Added environment variable suppport commands.
 
