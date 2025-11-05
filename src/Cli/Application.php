@@ -261,12 +261,13 @@ class Application extends Base
 	 * 
 	 * @return void
 	 */
-	private function registerCoreCommands(): void
-	{
-		$this->register( 'help', Commands\Core\HelpCommand::class );
-		$this->register( 'version', Commands\Core\VersionCommand::class );
-		$this->register( 'list', Commands\Core\ComponentListCommand::class );
-	}
+    private function registerCoreCommands(): void
+    {
+        $this->register( 'help', Commands\Core\HelpCommand::class );
+        $this->register( 'version', Commands\Core\VersionCommand::class );
+        $this->register( 'list', Commands\Core\ComponentListCommand::class );
+        $this->register( 'config:env', Commands\Core\ConfigEnvCommand::class );
+    }
 
 	/**
 	 * Show general help information
