@@ -47,10 +47,33 @@ if( version_compare( PHP_VERSION, '8.4.0', '<' ) )
 	exit( 1 );
 }
 
+// Load configuration if available
+$settings = null;
+$configPaths = [
+	getcwd() . '/config/config.yaml',
+	getcwd() . '/config.yaml',
+];
+
+foreach( $configPaths as $configPath )
+{
+	if( file_exists( $configPath ) )
+	{
+		try
+		{
+			$settings = new \Neuron\Data\Setting\Source\Yaml( $configPath );
+			break;
+		}
+		catch( \Exception $e )
+		{
+			// Silently ignore config loading errors
+		}
+	}
+}
+
 // Create and run the application
 try
 {
-	$app = new \Neuron\Cli\Application( '0.1.0' );
+	$app = new \Neuron\Cli\Application( '0.1.0', $settings );
 
 	// Pass command-line arguments to the application
 	$app->run( $argv );
