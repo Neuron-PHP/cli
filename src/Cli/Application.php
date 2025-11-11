@@ -61,13 +61,13 @@ class Application extends Base
 	private ?Commands\Command $currentCommand = null;
 
 	/**
-	 * @param string $Version
-	 * @param ISettingSource|null $Source
+	 * @param string $version
+	 * @param ISettingSource|null $source
 	 * @throws \Exception
 	 */
-	public function __construct( string $Version, ?ISettingSource $Source = null )
+	public function __construct( string $version, ?ISettingSource $source = null )
 	{
-		parent::__construct( $Version, $Source );
+		parent::__construct( $version, $source );
 		
 		$this->commandRegistry = new Registry();
 		$this->componentLoader = new ComponentLoader( $this->commandRegistry );
