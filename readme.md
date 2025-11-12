@@ -64,7 +64,7 @@ Export a YAML config as environment-style pairs for production.
 
 ```bash
 # Export project config to .env production file
-./vendor/bin/neuron config:env --config=config/config.yaml > .env.production
+./vendor/bin/neuron config:env --config=config/neuron.yaml > .env.production
 
 # Only export selected categories
 ./vendor/bin/neuron config:env --category=site,cache
@@ -243,7 +243,7 @@ class MakeControllerCommand extends Command
 | `help` | Display help for a command | `neuron help [command]` |
 | `list` | List all available commands | `neuron list` |
 | `version` | Show version information | `neuron version [--verbose]` |
-| `config:env` | Export config.yaml as KEY=VALUE pairs | `neuron config:env [--config=...] [--category=...] [--format=dotenv|shell] [--quote=...]` |
+| `config:env` | Export neuron.yaml as KEY=VALUE pairs | `neuron config:env [--config=...] [--category=...] [--format=dotenv|shell] [--quote=...]` |
 
 ## Output Helpers
 

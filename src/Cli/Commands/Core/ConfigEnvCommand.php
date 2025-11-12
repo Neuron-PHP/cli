@@ -17,12 +17,12 @@ class ConfigEnvCommand extends Command
 
     public function getDescription(): string
     {
-        return 'Export config.yaml as KEY=VALUE pairs';
+        return 'Export neuron.yaml as KEY=VALUE pairs';
     }
 
     public function configure(): void
     {
-        $this->addOption('config', 'c', true, 'Path to config.yaml', 'config/config.yaml');
+        $this->addOption('config', 'c', true, 'Path to neuron.yaml', 'config/neuron.yaml');
         $this->addOption('category', null, true, 'Comma-separated categories to export (e.g., site,cache)');
         $this->addOption('format', 'f', true, 'Output format: dotenv|shell', 'dotenv');
         $this->addOption('quote', 'q', true, 'Quoting mode: auto|always|never', 'auto');
@@ -30,7 +30,7 @@ class ConfigEnvCommand extends Command
 
     public function execute(): int
     {
-        $configPath = (string)$this->input->getOption('config', 'config/config.yaml');
+        $configPath = (string)$this->input->getOption('config', 'config/neuron.yaml');
         $format = strtolower((string)$this->input->getOption('format', 'dotenv'));
         $quoteMode = strtolower((string)$this->input->getOption('quote', 'auto'));
         $categoryOpt = $this->input->getOption('category');
@@ -48,7 +48,7 @@ class ConfigEnvCommand extends Command
         // Resolve and validate config file
         $file = $this->resolvePath($configPath);
         if (!file_exists($file) || !is_readable($file)) {
-            $this->output->error("config.yaml not found or unreadable: {$configPath}");
+            $this->output->error("neuron.yaml not found or unreadable: {$configPath}");
             return 2;
         }
 
@@ -56,7 +56,7 @@ class ConfigEnvCommand extends Command
         try {
             $settings = new YamlSettings($file);
         } catch (\Exception $e) {
-            $this->output->error('Failed to parse config.yaml: ' . $e->getMessage());
+            $this->output->error('Failed to parse neuron.yaml: ' . $e->getMessage());
             return 2;
         }
 
