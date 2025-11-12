@@ -1,4 +1,4 @@
-## 0.8.4
+## 0.8.4 2025-11-12
 
 * Minor bug fixes to support jobs.
 * Renamed config.yaml to neuron.yaml
