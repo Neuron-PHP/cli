@@ -1,3 +1,5 @@
+## 0.8.4
+
 * Minor bug fixes to support jobs.
 * Renamed config.yaml to neuron.yaml
 
