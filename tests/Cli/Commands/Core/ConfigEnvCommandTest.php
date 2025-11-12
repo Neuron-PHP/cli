@@ -35,7 +35,7 @@ class ConfigEnvCommandTest extends TestCase
     public function testDotenvOutputFromFixture(): void
     {
         [$code, $out] = $this->runCommand([
-            '--config=' . $this->fixture('config.yaml'),
+            '--config=' . $this->fixture('neuron.yaml'),
             '--quote=never'
         ]);
 
@@ -50,7 +50,7 @@ class ConfigEnvCommandTest extends TestCase
     public function testShellFormat(): void
     {
         [$code, $out] = $this->runCommand([
-            '--config=' . $this->fixture('config.yaml'),
+            '--config=' . $this->fixture('neuron.yaml'),
             '--format=shell'
         ]);
 
@@ -62,7 +62,7 @@ class ConfigEnvCommandTest extends TestCase
     public function testCategoryFilter(): void
     {
         [$code, $out] = $this->runCommand([
-            '--config=' . $this->fixture('config.yaml'),
+            '--config=' . $this->fixture('neuron.yaml'),
             '--category=site'
         ]);
 
