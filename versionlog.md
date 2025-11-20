@@ -1,4 +1,5 @@
 ## 0.8.5
+* Fixed a remaining config.yaml reference.
 
 ## 0.8.4 2025-11-12
 

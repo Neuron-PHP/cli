@@ -50,8 +50,8 @@ if( version_compare( PHP_VERSION, '8.4.0', '<' ) )
 // Load configuration if available
 $settings = null;
 $configPaths = [
-	getcwd() . '/config/config.yaml',
-	getcwd() . '/config.yaml',
+	getcwd() . '/config/neuron.yaml',
+	getcwd() . '/neuron.yaml',
 ];
 
 foreach( $configPaths as $configPath )
