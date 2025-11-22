@@ -1,4 +1,4 @@
-## 0.8.6
+## 0.8.6 2025-11-22
 * Added the initializer scaffold command.
 
 ## 0.8.5 2025-11-19
