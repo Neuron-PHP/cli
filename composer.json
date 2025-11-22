@@ -30,5 +30,10 @@
     },
     "bin": [
         "bin/neuron"
-    ]
+    ],
+    "extra": {
+        "neuron": {
+            "cli-provider": "Neuron\\Cli\\Provider"
+        }
+    }
 }
