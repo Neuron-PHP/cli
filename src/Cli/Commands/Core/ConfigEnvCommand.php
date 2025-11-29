@@ -3,7 +3,7 @@
 namespace Neuron\Cli\Commands\Core;
 
 use Neuron\Cli\Commands\Command;
-use Neuron\Data\Setting\Source\Yaml as YamlSettings;
+use Neuron\Data\Settings\Source\Yaml as YamlSettings;
 
 /**
  * Export configuration as environment-style pairs for production setups.
