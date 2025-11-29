@@ -7,7 +7,7 @@ use Neuron\Cli\Commands\Registry;
 use Neuron\Cli\Console\Input;
 use Neuron\Cli\Console\Output;
 use Neuron\Cli\Loader\ComponentLoader;
-use Neuron\Data\Setting\Source\ISettingSource;
+use Neuron\Data\Settings\Source\ISettingSource;
 use Neuron\Log\Log;
 
 /**

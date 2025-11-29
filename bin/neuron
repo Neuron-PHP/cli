@@ -60,7 +60,7 @@ foreach( $configPaths as $configPath )
 	{
 		try
 		{
-			$settings = new \Neuron\Data\Setting\Source\Yaml( $configPath );
+			$settings = new \Neuron\Data\Settings\Source\Yaml( $configPath );
 			break;
 		}
 		catch( \Exception $e )
