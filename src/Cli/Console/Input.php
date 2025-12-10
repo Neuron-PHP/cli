@@ -14,13 +14,16 @@ class Input
 	private array $arguments = [];
 	private array $options = [];
 	private array $rawArguments = [];
-	
+	private StreamInterface $stream;
+
 	/**
 	 * @param array $argv Command-line arguments (without script name)
+	 * @param StreamInterface|null $stream Stream for interactive I/O (null = use standard streams)
 	 */
-	public function __construct( array $argv = [] )
+	public function __construct( array $argv = [], ?StreamInterface $stream = null )
 	{
 		$this->argv = $argv;
+		$this->stream = $stream ?? new StandardStream();
 		$this->parseRaw();
 	}
 	
@@ -239,17 +242,17 @@ class Input
 	
 	/**
 	 * Check if input is interactive (connected to a TTY)
-	 * 
+	 *
 	 * @return bool
 	 */
 	public function isInteractive(): bool
 	{
-		return posix_isatty( STDIN );
+		return $this->stream->isInteractive();
 	}
 	
 	/**
 	 * Read a line from standard input
-	 * 
+	 *
 	 * @param string $prompt Optional prompt to display
 	 * @return string|false
 	 */
@@ -257,10 +260,10 @@ class Input
 	{
 		if( $prompt )
 		{
-			echo $prompt;
+			$this->stream->write( $prompt );
 		}
-		
-		return fgets( STDIN );
+
+		return $this->stream->read();
 	}
 	
 	/**
@@ -386,8 +389,8 @@ class Input
 		}
 		
 		// Display the question
-		echo $question . PHP_EOL;
-		
+		$this->stream->write( $question . PHP_EOL );
+
 		// Display choices
 		$index = 1;
 		$indexMap = [];
@@ -396,7 +399,7 @@ class Input
 			$indexMap[$index] = $key;
 			$isDefault = ( $default !== null && ( $key === $default || $value === $default ) );
 			$marker = $isDefault ? ' (default)' : '';
-			echo "  [{$index}] {$value}{$marker}" . PHP_EOL;
+			$this->stream->write( "  [{$index}] {$value}{$marker}" . PHP_EOL );
 			$index++;
 		}
 		
@@ -448,7 +451,7 @@ class Input
 			if( $choice === null && $default === null )
 			{
 				// Invalid choice and no default, ask again
-				echo "Invalid choice. Please try again." . PHP_EOL;
+				$this->stream->write( "Invalid choice. Please try again." . PHP_EOL );
 				return $this->choice( $question, $choices, $default, $allowMultiple );
 			}
 			

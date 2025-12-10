@@ -3,12 +3,24 @@
 namespace Neuron\Cli\Commands\Core;
 
 use Neuron\Cli\Commands\Command;
+use Neuron\Core\System\IFileSystem;
+use Neuron\Core\System\RealFileSystem;
 
 /**
  * Version command - displays version information for Neuron components
  */
 class VersionCommand extends Command
 {
+	private IFileSystem $fs;
+
+	/**
+	 * @param IFileSystem|null $fs File system implementation (null = use real file system)
+	 */
+	public function __construct( ?IFileSystem $fs = null )
+	{
+		$this->fs = $fs ?? new RealFileSystem();
+	}
+
 	/**
 	 * @inheritDoc
 	 */
@@ -159,57 +171,68 @@ class VersionCommand extends Command
 	
 	/**
 	 * Get the CLI component version
-	 * 
+	 *
 	 * @return string
 	 */
 	private function getCliVersion(): string
 	{
 		$composerJson = dirname( __DIR__, 4 ) . '/composer.json';
-		
-		if( file_exists( $composerJson ) )
+
+		if( $this->fs->fileExists( $composerJson ) )
 		{
-			$composer = json_decode( file_get_contents( $composerJson ), true );
-			return $composer['version'] ?? '0.1.0';
+			$content = $this->fs->readFile( $composerJson );
+			if( $content !== false )
+			{
+				$composer = json_decode( $content, true );
+				return $composer['version'] ?? '0.1.0';
+			}
 		}
-		
+
 		return '0.1.0';
 	}
 	
 	/**
 	 * Get information about installed Neuron components
-	 * 
+	 *
 	 * @return array
 	 */
 	private function getInstalledComponents(): array
 	{
 		$components = [];
-		
+
 		// Find vendor directory
 		$vendorDir = $this->findVendorDirectory();
-		
+
 		if( !$vendorDir )
 		{
 			return $components;
 		}
-		
+
 		// Load from composer's installed.json
 		$installedJson = $vendorDir . '/composer/installed.json';
-		
-		if( !file_exists( $installedJson ) )
+
+		if( !$this->fs->fileExists( $installedJson ) )
 		{
 			return $components;
 		}
-		
-		$installed = json_decode( file_get_contents( $installedJson ), true );
-		
+
+		$content = $this->fs->readFile( $installedJson );
+
+		if( $content === false )
+		{
+			return $components;
+		}
+
+		$installed = json_decode( $content, true );
+
 		if( !$installed )
 		{
 			return $components;
 		}
-		
+
 		// Handle both composer 1.x and 2.x formats
 		$packages = isset( $installed['packages'] ) ? $installed['packages'] : $installed;
-		
+
 		foreach( $packages as $package )
 		{
 			// Only include neuron-php packages
@@ -218,35 +241,37 @@ class VersionCommand extends Command
 				$components[$package['name']] = $package;
 			}
 		}
-		
+
 		// Sort by name
 		ksort( $components );
-		
+
 		return $components;
 	}
 	
 	/**
 	 * Find the vendor directory
-	 * 
+	 *
 	 * @return string|null
 	 */
 	private function findVendorDirectory(): ?string
 	{
+		$cwd = $this->fs->getcwd();
+
 		$locations = [
 			dirname( __DIR__, 4 ) . '/vendor',
 			dirname( __DIR__, 5 ) . '/vendor',
-			getcwd() . '/vendor',
+			$cwd . '/vendor',
 		];
-		
+
 		foreach( $locations as $location )
 		{
-			$path = realpath( $location );
-			if( $path && is_dir( $path ) )
+			$path = $this->fs->realpath( $location );
+			if( $path && $this->fs->isDir( $path ) )
 			{
 				return $path;
 			}
 		}
-		
+
 		return null;
 	}
 }

@@ -3,6 +3,8 @@
 namespace Neuron\Cli\Loader;
 
 use Neuron\Cli\Commands\Registry;
+use Neuron\Core\System\IFileSystem;
+use Neuron\Core\System\RealFileSystem;
 
 /**
  * Loads commands from installed Neuron components.
@@ -13,13 +15,16 @@ class ComponentLoader
 {
 	private Registry $registry;
 	private array $loadedProviders = [];
-	
+	private IFileSystem $fs;
+
 	/**
 	 * @param Registry $registry
+	 * @param IFileSystem|null $fs File system implementation (null = use real file system)
 	 */
-	public function __construct( Registry $registry )
+	public function __construct( Registry $registry, ?IFileSystem $fs = null )
 	{
 		$this->registry = $registry;
+		$this->fs = $fs ?? new RealFileSystem();
 	}
 	
 	/**
@@ -39,13 +44,14 @@ class ComponentLoader
 		
 		// Load components from composer's installed.json
 		$installedJson = $vendorDir . '/composer/installed.json';
-		
-		if( !file_exists( $installedJson ) )
+
+		if( !$this->fs->fileExists( $installedJson ) )
 		{
 			return;
 		}
-		
-		$installed = json_decode( file_get_contents( $installedJson ), true );
+
+		$content = $this->fs->readFile( $installedJson );
+		$installed = $content !== false ? json_decode( $content, true ) : null;
 		
 		if( !$installed )
 		{
@@ -123,13 +129,14 @@ class ComponentLoader
 	private function loadProjectCommands(): void
 	{
 		$composerJson = $this->findComposerJson();
-		
-		if( !$composerJson || !file_exists( $composerJson ) )
+
+		if( !$composerJson || !$this->fs->fileExists( $composerJson ) )
 		{
 			return;
 		}
-		
-		$composer = json_decode( file_get_contents( $composerJson ), true );
+
+		$content = $this->fs->readFile( $composerJson );
+		$composer = $content !== false ? json_decode( $content, true ) : null;
 		
 		if( !$composer )
 		{
@@ -162,23 +169,25 @@ class ComponentLoader
 	 */
 	private function findVendorDirectory(): ?string
 	{
+		$cwd = $this->fs->getcwd();
+
 		// Try common locations
 		$locations = [
 			__DIR__ . '/../../../vendor',  // When installed as dependency
 			__DIR__ . '/../../../../vendor', // When in development
-			getcwd() . '/vendor',          // Current directory
+			$cwd . '/vendor',          // Current directory
 			dirname( __DIR__, 4 ) . '/vendor', // Alternative location
 		];
-		
+
 		foreach( $locations as $location )
 		{
-			$path = realpath( $location );
-			if( $path && is_dir( $path ) )
+			$path = $this->fs->realpath( $location );
+			if( $path && $this->fs->isDir( $path ) )
 			{
 				return $path;
 			}
 		}
-		
+
 		return null;
 	}
 	
@@ -189,21 +198,23 @@ class ComponentLoader
 	 */
 	private function findComposerJson(): ?string
 	{
+		$cwd = $this->fs->getcwd();
+
 		// Try common locations
 		$locations = [
-			getcwd() . '/composer.json',
+			$cwd . '/composer.json',
 			dirname( __DIR__, 4 ) . '/composer.json',
 			dirname( __DIR__, 5 ) . '/composer.json',
 		];
-		
+
 		foreach( $locations as $location )
 		{
-			if( file_exists( $location ) )
+			if( $this->fs->fileExists( $location ) )
 			{
 				return $location;
 			}
 		}
-		
+
 		return null;
 	}
 	

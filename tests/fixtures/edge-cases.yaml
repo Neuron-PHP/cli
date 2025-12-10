@@ -1,0 +1,28 @@
+flags:
+  enabled: true
+  disabled: false
+  empty: null
+
+special:
+  with_spaces: "value with spaces"
+  with_quotes: 'value with "quotes"'
+  with_hash: "value # with hash"
+  with_dollar: "$HOME/path"
+
+nested:
+  database:
+    host: localhost
+    port: 3306
+    credentials:
+      user: admin
+      pass: secret
+
+arrays:
+  tags:
+    - production
+    - staging
+    - development
+  ports:
+    - 80
+    - 443
+    - 8080

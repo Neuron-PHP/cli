@@ -102,10 +102,71 @@ class CommandTest extends TestCase
 	{
 		$this->command->setInput( new Input( [] ) );
 		$this->command->setOutput( new Output( false ) );
-		
+
 		$exitCode = $this->command->execute();
-		
+
 		$this->assertEquals( 0, $exitCode );
+	}
+
+	public function testGetHelpWithOptionWithoutShortcut(): void
+	{
+		$command = new class extends Command {
+			public function getName(): string { return 'test'; }
+			public function getDescription(): string { return 'Test'; }
+			public function execute(): int { return 0; }
+			public function configure(): void {
+				$this->addOption( 'long-only', null, true, 'Option without shortcut', 'default' );
+			}
+		};
+
+		$command->configure();
+		$help = $command->getHelp();
+
+		// Should not have shortcut prefix
+		$this->assertStringContainsString( '--long-only', $help );
+		$this->assertStringContainsString( 'Option without shortcut', $help );
+		$this->assertStringContainsString( '[default: default]', $help );
+	}
+
+	public function testHasArgument(): void
+	{
+		$this->command->configure();
+
+		$this->assertTrue( $this->command->hasArgument( 'name' ) );
+		$this->assertTrue( $this->command->hasArgument( 'optional' ) );
+		$this->assertFalse( $this->command->hasArgument( 'nonexistent' ) );
+	}
+
+	public function testHasOption(): void
+	{
+		$this->command->configure();
+
+		$this->assertTrue( $this->command->hasOption( 'verbose' ) );
+		$this->assertTrue( $this->command->hasOption( 'output' ) );
+		$this->assertFalse( $this->command->hasOption( 'nonexistent' ) );
+	}
+
+	public function testValidateWithMissingRequiredArgument(): void
+	{
+		$this->command->configure();
+		$this->command->setInput( new Input( [] ) ); // Empty input, missing required 'name'
+
+		$this->expectException( \InvalidArgumentException::class );
+		$this->expectExceptionMessage( "Required argument 'name' is missing" );
+
+		$this->command->validate();
+	}
+
+	public function testValidateWithAllRequiredArgumentsPresent(): void
+	{
+		$this->command->configure();
+		$input = new Input( [ 'test-value' ] ); // Pass value as positional argument
+		$input->parse( $this->command ); // Parse according to command config
+		$this->command->setInput( $input );
+
+		// Should not throw exception
+		$this->command->validate();
+		$this->assertTrue( true );
 	}
 }
 
