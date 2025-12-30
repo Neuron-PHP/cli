@@ -5,6 +5,8 @@ namespace Tests\Cli\Commands;
 use Neuron\Cli\Commands\Command;
 use Neuron\Cli\Console\Input;
 use Neuron\Cli\Console\Output;
+use Neuron\Cli\IO\IInputReader;
+use Neuron\Cli\IO\TestInputReader;
 use PHPUnit\Framework\TestCase;
 
 class CommandTest extends TestCase
@@ -168,6 +170,217 @@ class CommandTest extends TestCase
 		$this->command->validate();
 		$this->assertTrue( true );
 	}
+
+	public function testSetInputReader(): void
+	{
+		$inputReader = new TestInputReader();
+		$result = $this->command->setInputReader( $inputReader );
+
+		// Should return self for fluent interface
+		$this->assertSame( $this->command, $result );
+
+		// Verify it was set using reflection
+		$reflection = new \ReflectionClass( $this->command );
+		$prop = $reflection->getProperty( 'inputReader' );
+		$prop->setAccessible( true );
+
+		$this->assertSame( $inputReader, $prop->getValue( $this->command ) );
+	}
+
+	public function testGetInputReaderCreatesDefaultWhenNotSet(): void
+	{
+		$this->command->setInput( new Input( [] ) );
+		$this->command->setOutput( new Output( false ) );
+
+		// Access protected method using reflection
+		$reflection = new \ReflectionClass( $this->command );
+		$method = $reflection->getMethod( 'getInputReader' );
+		$method->setAccessible( true );
+
+		$reader = $method->invoke( $this->command );
+
+		$this->assertInstanceOf( IInputReader::class, $reader );
+	}
+
+	public function testGetInputReaderCreatesDefaultOutputWhenNotSet(): void
+	{
+		// Don't set output - should auto-initialize
+		// Access protected method using reflection
+		$reflection = new \ReflectionClass( $this->command );
+		$method = $reflection->getMethod( 'getInputReader' );
+		$method->setAccessible( true );
+
+		// Should not throw exception even though output wasn't set
+		$reader = $method->invoke( $this->command );
+
+		$this->assertInstanceOf( IInputReader::class, $reader );
+
+		// Verify output was auto-initialized
+		$outputProp = $reflection->getProperty( 'output' );
+		$outputProp->setAccessible( true );
+		$output = $outputProp->getValue( $this->command );
+
+		$this->assertInstanceOf( Output::class, $output );
+	}
+
+	public function testGetInputReaderReturnsInjectedReader(): void
+	{
+		$inputReader = new TestInputReader();
+		$this->command->setInputReader( $inputReader );
+
+		// Access protected method using reflection
+		$reflection = new \ReflectionClass( $this->command );
+		$method = $reflection->getMethod( 'getInputReader' );
+		$method->setAccessible( true );
+
+		$reader = $method->invoke( $this->command );
+
+		$this->assertSame( $inputReader, $reader );
+	}
+
+	public function testPromptDelegatesToInputReader(): void
+	{
+		$inputReader = new TestInputReader();
+		$inputReader->addResponse( 'test response' );
+
+		$command = new InteractiveTestCommand();
+		$command->setInput( new Input( [] ) );
+		$command->setOutput( new Output( false ) );
+		$command->setInputReader( $inputReader );
+
+		$result = $command->callPrompt( 'Enter something: ' );
+
+		$this->assertEquals( 'test response', $result );
+
+		// Verify prompt was shown
+		$history = $inputReader->getPromptHistory();
+		$this->assertCount( 1, $history );
+		$this->assertEquals( 'Enter something: ', $history[0] );
+	}
+
+	public function testConfirmDelegatesToInputReader(): void
+	{
+		$inputReader = new TestInputReader();
+		$inputReader->addResponse( 'yes' );
+
+		$command = new InteractiveTestCommand();
+		$command->setInput( new Input( [] ) );
+		$command->setOutput( new Output( false ) );
+		$command->setInputReader( $inputReader );
+
+		$result = $command->callConfirm( 'Are you sure?', false );
+
+		$this->assertTrue( $result );
+	}
+
+	public function testConfirmWithDefault(): void
+	{
+		$inputReader = new TestInputReader();
+		$inputReader->addResponse( '' ); // Empty response
+
+		$command = new InteractiveTestCommand();
+		$command->setInput( new Input( [] ) );
+		$command->setOutput( new Output( false ) );
+		$command->setInputReader( $inputReader );
+
+		// Should use default when response is empty
+		$result = $command->callConfirm( 'Continue?', true );
+
+		$this->assertTrue( $result );
+	}
+
+	public function testSecretDelegatesToInputReader(): void
+	{
+		$inputReader = new TestInputReader();
+		$inputReader->addResponse( 'secret-password' );
+
+		$command = new InteractiveTestCommand();
+		$command->setInput( new Input( [] ) );
+		$command->setOutput( new Output( false ) );
+		$command->setInputReader( $inputReader );
+
+		$result = $command->callSecret( 'Enter password: ' );
+
+		$this->assertEquals( 'secret-password', $result );
+	}
+
+	public function testChoiceDelegatesToInputReader(): void
+	{
+		$inputReader = new TestInputReader();
+		$inputReader->addResponse( 'staging' );
+
+		$command = new InteractiveTestCommand();
+		$command->setInput( new Input( [] ) );
+		$command->setOutput( new Output( false ) );
+		$command->setInputReader( $inputReader );
+
+		$options = ['development', 'staging', 'production'];
+		$result = $command->callChoice( 'Select environment:', $options );
+
+		$this->assertEquals( 'staging', $result );
+	}
+
+	public function testChoiceByIndex(): void
+	{
+		$inputReader = new TestInputReader();
+		$inputReader->addResponse( '1' ); // Select index 1
+
+		$command = new InteractiveTestCommand();
+		$command->setInput( new Input( [] ) );
+		$command->setOutput( new Output( false ) );
+		$command->setInputReader( $inputReader );
+
+		$options = ['dev', 'staging', 'prod'];
+		$result = $command->callChoice( 'Select:', $options );
+
+		$this->assertEquals( 'staging', $result );
+	}
+
+	public function testChoiceWithDefault(): void
+	{
+		$inputReader = new TestInputReader();
+		$inputReader->addResponse( '' ); // Empty response
+
+		$command = new InteractiveTestCommand();
+		$command->setInput( new Input( [] ) );
+		$command->setOutput( new Output( false ) );
+		$command->setInputReader( $inputReader );
+
+		$options = ['dev', 'staging', 'prod'];
+		$result = $command->callChoice( 'Select:', $options, 'dev' );
+
+		$this->assertEquals( 'dev', $result );
+	}
+
+	public function testPromptWorksWithoutOutputSet(): void
+	{
+		// Test that prompt works even if setOutput() was never called
+		$inputReader = new TestInputReader();
+		$inputReader->addResponse( 'test' );
+
+		$command = new InteractiveTestCommand();
+		$command->setInputReader( $inputReader );
+
+		// Should not throw exception even though output wasn't set
+		$result = $command->callPrompt( 'Enter: ' );
+
+		$this->assertEquals( 'test', $result );
+	}
+
+	public function testConfirmWorksWithoutOutputSet(): void
+	{
+		// Test that confirm works even if setOutput() was never called
+		$inputReader = new TestInputReader();
+		$inputReader->addResponse( 'yes' );
+
+		$command = new InteractiveTestCommand();
+		$command->setInputReader( $inputReader );
+
+		// Should not throw exception even though output wasn't set
+		$result = $command->callConfirm( 'Continue?' );
+
+		$this->assertTrue( $result );
+	}
 }
 
 /**
@@ -197,5 +410,47 @@ class TestCommand extends Command
 	public function execute(): int
 	{
 		return 0;
+	}
+}
+
+/**
+ * Test command that exposes protected methods for testing
+ */
+class InteractiveTestCommand extends Command
+{
+	public function getName(): string
+	{
+		return 'interactive:test';
+	}
+
+	public function getDescription(): string
+	{
+		return 'Test command for interactive methods';
+	}
+
+	public function execute(): int
+	{
+		return 0;
+	}
+
+	// Expose protected methods for testing
+	public function callPrompt( string $message ): string
+	{
+		return $this->prompt( $message );
+	}
+
+	public function callConfirm( string $message, bool $default = false ): bool
+	{
+		return $this->confirm( $message, $default );
+	}
+
+	public function callSecret( string $message ): string
+	{
+		return $this->secret( $message );
+	}
+
+	public function callChoice( string $message, array $options, ?string $default = null ): string
+	{
+		return $this->choice( $message, $options, $default );
 	}
 }

@@ -474,6 +474,10 @@ public function execute(): int
 
 ## Testing Your Commands
 
+The CLI component provides comprehensive testing support, including the ability to test commands that require user input.
+
+### Testing Commands Without User Input
+
 ```php
 use PHPUnit\Framework\TestCase;
 use Neuron\Cli\Console\Input;
@@ -484,21 +488,153 @@ class MakeControllerCommandTest extends TestCase
     public function testExecute(): void
     {
         $command = new MakeControllerCommand();
-        
+
         // Mock input
         $input = new Input(['UserController', '--resource']);
         $output = new Output(false); // No colors for testing
-        
+
         $command->setInput($input);
         $command->setOutput($output);
         $command->configure();
         $input->parse($command);
-        
+
         $exitCode = $command->execute();
-        
+
         $this->assertEquals(0, $exitCode);
     }
 }
+```
+
+### Testing Commands With User Input
+
+Commands that use `prompt()`, `confirm()`, `secret()`, or `choice()` can be tested using the `TestInputReader`:
+
+```php
+use PHPUnit\Framework\TestCase;
+use Neuron\Cli\Console\Input;
+use Neuron\Cli\Console\Output;
+use Neuron\Cli\IO\TestInputReader;
+
+class SetupCommandTest extends TestCase
+{
+    public function testInteractiveSetup(): void
+    {
+        $command = new SetupCommand();
+
+        // Create test input reader with pre-programmed responses
+        $inputReader = new TestInputReader();
+        $inputReader->addResponse('my-project');        // Project name
+        $inputReader->addResponse('John Doe');          // Author name
+        $inputReader->addResponse('john@example.com');  // Email
+        $inputReader->addResponse('yes');               // Confirmation
+
+        // Configure command
+        $input = new Input([]);
+        $output = new Output(false);
+
+        $command->setInput($input);
+        $command->setOutput($output);
+        $command->setInputReader($inputReader);
+
+        // Execute command
+        $exitCode = $command->execute();
+
+        // Assertions
+        $this->assertEquals(0, $exitCode);
+
+        // Verify the prompts that were shown
+        $prompts = $inputReader->getPromptHistory();
+        $this->assertCount(4, $prompts);
+        $this->assertStringContainsString('Project name', $prompts[0]);
+        $this->assertStringContainsString('Author name', $prompts[1]);
+    }
+
+    public function testUserCancelsSetup(): void
+    {
+        $command = new SetupCommand();
+
+        // User will cancel the setup
+        $inputReader = new TestInputReader();
+        $inputReader->addResponses([
+            'test-project',
+            'Test User',
+            'test@example.com',
+            'no'  // Cancel confirmation
+        ]);
+
+        $input = new Input([]);
+        $output = new Output(false);
+
+        $command->setInput($input);
+        $command->setOutput($output);
+        $command->setInputReader($inputReader);
+
+        $exitCode = $command->execute();
+
+        // Should return non-zero exit code when cancelled
+        $this->assertNotEquals(0, $exitCode);
+    }
+}
+```
+
+### Using Input Reader in Commands
+
+To make your commands testable, use the convenience methods provided by the `Command` base class:
+
+```php
+class SetupCommand extends Command
+{
+    public function execute(): int
+    {
+        // Use built-in convenience methods instead of reading STDIN directly
+        $name = $this->prompt('Enter project name: ');
+
+        if ($this->confirm('Enable caching?', true)) {
+            // User confirmed
+        }
+
+        $password = $this->secret('Enter password: ');
+
+        $env = $this->choice(
+            'Select environment:',
+            ['development', 'staging', 'production'],
+            'development'
+        );
+
+        return 0;
+    }
+}
+```
+
+These convenience methods automatically use the injected `IInputReader`, making your commands fully testable without requiring actual user input.
+
+### TestInputReader Features
+
+The `TestInputReader` class provides:
+
+- **Response Queue**: Pre-program multiple responses with `addResponse()` or `addResponses()`
+- **Prompt History**: Track all prompts shown with `getPromptHistory()`
+- **Automatic Validation**: Throws exceptions if responses run out, helping catch test bugs
+- **Fluent Interface**: Chain `addResponse()` calls for cleaner test setup
+- **Full Interface Support**: Implements all `IInputReader` methods (prompt, confirm, secret, choice)
+
+```php
+$reader = new TestInputReader();
+$reader
+    ->addResponse('value1')
+    ->addResponse('value2')
+    ->addResponse('yes');
+
+// Check if there are responses remaining
+if ($reader->hasMoreResponses()) {
+    $count = $reader->getRemainingResponseCount();
+}
+
+// Get history of prompts
+$prompts = $reader->getPromptHistory();
+
+// Reset for reuse
+$reader->reset();
 ```
 
 ## Contributing
