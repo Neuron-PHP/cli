@@ -152,11 +152,116 @@ class OutputTest extends TestCase
 		ob_start();
 		$this->output->title( 'Test' );
 		$captured = ob_get_clean();
-		
+
 		// Should have the title with spaces
 		$this->assertStringContainsString( '  Test  ', $captured );
 		// Should have newlines before and after
 		$this->assertStringStartsWith( PHP_EOL, $captured );
 		$this->assertStringEndsWith( PHP_EOL . PHP_EOL, $captured );
+	}
+
+	public function testComment(): void
+	{
+		ob_start();
+		$this->output->comment( 'Comment message' );
+		$captured = ob_get_clean();
+
+		$this->assertStringContainsString( 'Comment message', $captured );
+	}
+
+	public function testQuestion(): void
+	{
+		ob_start();
+		$this->output->question( 'Question message' );
+		$captured = ob_get_clean();
+
+		$this->assertStringContainsString( 'Question message', $captured );
+	}
+
+	public function testCreateProgressBar(): void
+	{
+		$progressBar = $this->output->createProgressBar( 100 );
+
+		$this->assertInstanceOf( \Neuron\Cli\Console\ProgressBar::class, $progressBar );
+	}
+
+	public function testClearLine(): void
+	{
+		ob_start();
+		$this->output->clearLine();
+		$captured = ob_get_clean();
+
+		$this->assertEquals( "\r\033[K", $captured );
+	}
+
+	public function testConstructorWithColorsEnabled(): void
+	{
+		$output = new Output( true );
+
+		ob_start();
+		$output->info( 'Colored info' );
+		$captured = ob_get_clean();
+
+		// With colors enabled, should contain ANSI color codes
+		$this->assertStringContainsString( "\033[", $captured );
+	}
+
+	public function testConstructorWithAutoDetect(): void
+	{
+		// Constructor with null should auto-detect color support
+		$output = new Output( null );
+
+		// Just verify it doesn't throw an exception
+		$this->assertInstanceOf( Output::class, $output );
+	}
+
+	public function testWritelnWithColors(): void
+	{
+		$output = new Output( true );
+
+		ob_start();
+		$output->writeln( 'Red text', 'red' );
+		$captured = ob_get_clean();
+
+		// Should contain ANSI color codes
+		$this->assertStringContainsString( "\033[", $captured );
+		$this->assertStringContainsString( 'Red text', $captured );
+	}
+
+	public function testWritelnWithBackgroundColor(): void
+	{
+		$output = new Output( true );
+
+		ob_start();
+		$output->writeln( 'Text with background', 'white', 'blue' );
+		$captured = ob_get_clean();
+
+		// Should contain ANSI color codes for both foreground and background
+		$this->assertStringContainsString( "\033[", $captured );
+		$this->assertStringContainsString( 'Text with background', $captured );
+	}
+
+	public function testWritelnWithDefaultColorNoColorize(): void
+	{
+		$output = new Output( true );
+
+		ob_start();
+		$output->writeln( 'Default color text' );
+		$captured = ob_get_clean();
+
+		// With default color and no background, should not colorize
+		$this->assertEquals( 'Default color text' . PHP_EOL, $captured );
+	}
+
+	public function testWritelnWithInvalidColor(): void
+	{
+		$output = new Output( true );
+
+		ob_start();
+		$output->writeln( 'Text', 'invalid_color' );
+		$captured = ob_get_clean();
+
+		// Invalid color should just output plain text
+		$this->assertEquals( 'Text' . PHP_EOL, $captured );
 	}
 }

@@ -91,4 +91,78 @@ class RegistryTest extends TestCase
 		$this->assertEmpty( $this->registry->all() );
 		$this->assertEmpty( $this->registry->getNamespaces() );
 	}
+
+	public function testRemoveExistingCommand(): void
+	{
+		$this->registry->register( 'test:command', 'TestCommand' );
+		$this->assertTrue( $this->registry->has( 'test:command' ) );
+
+		$result = $this->registry->remove( 'test:command' );
+
+		$this->assertTrue( $result );
+		$this->assertFalse( $this->registry->has( 'test:command' ) );
+	}
+
+	public function testRemoveNonExistentCommand(): void
+	{
+		$result = $this->registry->remove( 'non:existent' );
+
+		$this->assertFalse( $result );
+	}
+
+	public function testClear(): void
+	{
+		$this->registry->register( 'test:one', 'TestOne' );
+		$this->registry->register( 'test:two', 'TestTwo' );
+		$this->assertCount( 2, $this->registry->all() );
+
+		$this->registry->clear();
+
+		$this->assertEmpty( $this->registry->all() );
+		$this->assertEquals( 0, $this->registry->count() );
+	}
+
+	public function testCount(): void
+	{
+		$this->assertEquals( 0, $this->registry->count() );
+
+		$this->registry->register( 'test:one', 'TestOne' );
+		$this->assertEquals( 1, $this->registry->count() );
+
+		$this->registry->register( 'test:two', 'TestTwo' );
+		$this->assertEquals( 2, $this->registry->count() );
+	}
+
+	public function testFindWithWildcard(): void
+	{
+		$this->registry->register( 'cms:init', 'CmsInit' );
+		$this->registry->register( 'cms:build', 'CmsBuild' );
+		$this->registry->register( 'db:migrate', 'DbMigrate' );
+
+		$matches = $this->registry->find( 'cms:*' );
+
+		$this->assertCount( 2, $matches );
+		$this->assertArrayHasKey( 'cms:init', $matches );
+		$this->assertArrayHasKey( 'cms:build', $matches );
+	}
+
+	public function testFindExactMatch(): void
+	{
+		$this->registry->register( 'cms:init', 'CmsInit' );
+		$this->registry->register( 'cms:build', 'CmsBuild' );
+
+		$matches = $this->registry->find( 'cms:init' );
+
+		$this->assertCount( 1, $matches );
+		$this->assertArrayHasKey( 'cms:init', $matches );
+	}
+
+	public function testFindNoMatches(): void
+	{
+		$this->registry->register( 'cms:init', 'CmsInit' );
+
+		$matches = $this->registry->find( 'db:*' );
+
+		$this->assertEmpty( $matches );
+	}
 }
