@@ -1,9 +1,8 @@
 ## 0.8.9
+* Testability refactoring.
 
 ## 0.8.8 2025-11-28
-
 ## 0.8.7 2025-11-24
-
 ## 0.8.6 2025-11-22
 * Added the initializer scaffold command.
 

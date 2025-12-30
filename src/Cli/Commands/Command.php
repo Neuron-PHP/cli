@@ -4,6 +4,8 @@ namespace Neuron\Cli\Commands;
 
 use Neuron\Cli\Console\Input;
 use Neuron\Cli\Console\Output;
+use Neuron\Cli\IO\IInputReader;
+use Neuron\Cli\IO\StdinInputReader;
 
 /**
  * Abstract base class for all CLI commands.
@@ -14,6 +16,7 @@ abstract class Command
 {
 	protected Input $input;
 	protected Output $output;
+	protected ?IInputReader $inputReader = null;
 	protected array $arguments = [];
 	protected array $options = [];
 	
@@ -287,7 +290,7 @@ abstract class Command
 	
 	/**
 	 * Validate that required arguments are present
-	 * 
+	 *
 	 * @throws \InvalidArgumentException
 	 * @return void
 	 */
@@ -300,5 +303,122 @@ abstract class Command
 				throw new \InvalidArgumentException( "Required argument '{$name}' is missing" );
 			}
 		}
+	}
+
+	/**
+	 * Get the input reader instance.
+	 *
+	 * Creates a default StdinInputReader if not already set.
+	 * This enables testable CLI commands by abstracting user input.
+	 *
+	 * @return IInputReader
+	 */
+	protected function getInputReader(): IInputReader
+	{
+		if( !$this->inputReader ) {
+			$this->inputReader = new StdinInputReader( $this->output );
+		}
+
+		return $this->inputReader;
+	}
+
+	/**
+	 * Set the input reader (for dependency injection, especially in tests).
+	 *
+	 * This allows tests to inject a TestInputReader with pre-programmed
+	 * responses instead of requiring actual user input.
+	 *
+	 * @param IInputReader $inputReader
+	 * @return self
+	 */
+	public function setInputReader( IInputReader $inputReader ): self
+	{
+		$this->inputReader = $inputReader;
+		return $this;
+	}
+
+	/**
+	 * Prompt user for input.
+	 *
+	 * Convenience method that delegates to the input reader.
+	 *
+	 * Example:
+	 * ```php
+	 * $name = $this->prompt( "Enter your name: " );
+	 * ```
+	 *
+	 * @param string $message The prompt message to display
+	 * @return string The user's response (trimmed)
+	 */
+	protected function prompt( string $message ): string
+	{
+		return $this->getInputReader()->prompt( $message );
+	}
+
+	/**
+	 * Ask user for yes/no confirmation.
+	 *
+	 * Convenience method that delegates to the input reader.
+	 * Accepts: y, yes, true, 1 (case-insensitive) as positive responses.
+	 *
+	 * Example:
+	 * ```php
+	 * if( $this->confirm( "Delete all files?" ) ) {
+	 *     // User confirmed
+	 * }
+	 * ```
+	 *
+	 * @param string $message The confirmation message
+	 * @param bool $default Default value if user just presses enter
+	 * @return bool True if user confirms, false otherwise
+	 */
+	protected function confirm( string $message, bool $default = false ): bool
+	{
+		return $this->getInputReader()->confirm( $message, $default );
+	}
+
+	/**
+	 * Prompt for sensitive input without echoing to console.
+	 *
+	 * Convenience method that delegates to the input reader.
+	 * Note: Secret input hiding only works on Unix-like systems.
+	 *
+	 * Example:
+	 * ```php
+	 * $password = $this->secret( "Enter password: " );
+	 * ```
+	 *
+	 * @param string $message The prompt message
+	 * @return string The user's input (trimmed)
+	 */
+	protected function secret( string $message ): string
+	{
+		return $this->getInputReader()->secret( $message );
+	}
+
+	/**
+	 * Prompt user to select from a list of options.
+	 *
+	 * Convenience method that delegates to the input reader.
+	 * Users can select by entering either the option index (numeric)
+	 * or the exact option text.
+	 *
+	 * Example:
+	 * ```php
+	 * $env = $this->choice(
+	 *     "Select environment:",
+	 *     ['development', 'staging', 'production'],
+	 *     'development'
+	 * );
+	 * ```
+	 *
+	 * @param string $message The prompt message
+	 * @param array<string> $options Available options
+	 * @param string|null $default Default option (will be marked with *)
+	 * @return string The selected option
+	 */
+	protected function choice( string $message, array $options, ?string $default = null ): string
+	{
+		return $this->getInputReader()->choice( $message, $options, $default );
 	}
 }
