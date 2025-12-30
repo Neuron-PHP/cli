@@ -158,7 +158,7 @@ class StdinInputReaderTest extends TestCase
 		$this->assertEquals( 'staging', $result );
 	}
 
-	public function testChoiceWithInvalidSelectionRetriesOnce(): void
+	public function testChoiceWithInvalidSelectionRetries(): void
 	{
 		$mock = $this->getMockBuilder( StdinInputReader::class )
 			->setConstructorArgs( [$this->output] )
@@ -189,5 +189,103 @@ class StdinInputReaderTest extends TestCase
 		// but we can't test that easily in unit tests
 		// This test just verifies the interface works
 		$this->assertInstanceOf( StdinInputReader::class, $mock );
+	}
+
+	public function testSecretMethodExistsAndIsCallable(): void
+	{
+		// Verify secret method exists and can be called
+		$reader = new StdinInputReader( $this->output );
+		$reflection = new \ReflectionClass( $reader );
+
+		$this->assertTrue( $reflection->hasMethod( 'secret' ) );
+		$method = $reflection->getMethod( 'secret' );
+		$this->assertTrue( $method->isPublic() );
+
+		// The method should handle both TTY and non-TTY environments gracefully
+		// We can't easily test actual STDIN reading in unit tests, but we verify
+		// the method exists and has the correct visibility
+	}
+
+	public function testIsTtyMethodExists(): void
+	{
+		// Use reflection to verify the isTty method exists
+		$reflection = new \ReflectionClass( StdinInputReader::class );
+
+		$this->assertTrue( $reflection->hasMethod( 'isTty' ) );
+
+		$method = $reflection->getMethod( 'isTty' );
+		$this->assertTrue( $method->isPrivate() );
+	}
+
+	public function testIsTtyReturnsBooleanValue(): void
+	{
+		// Use reflection to invoke the private isTty method
+		$reader = new StdinInputReader( $this->output );
+		$reflection = new \ReflectionClass( $reader );
+		$method = $reflection->getMethod( 'isTty' );
+		$method->setAccessible( true );
+
+		$result = $method->invoke( $reader );
+
+		// Should return a boolean value (true or false depending on environment)
+		$this->assertIsBool( $result );
+	}
+
+	public function testChoiceWithMaxRetriesUsesDefault(): void
+	{
+		$mock = $this->getMockBuilder( StdinInputReader::class )
+			->setConstructorArgs( [$this->output] )
+			->onlyMethods( ['prompt'] )
+			->getMock();
+
+		// All responses will be invalid
+		$mock->expects( $this->exactly( 10 ) ) // MAX_RETRY_ATTEMPTS
+			->method( 'prompt' )
+			->willReturn( 'invalid' );
+
+		$options = ['dev', 'staging', 'prod'];
+		$result = $mock->choice( 'Select:', $options, 'dev' );
+
+		// Should fall back to default after max retries
+		$this->assertEquals( 'dev', $result );
+	}
+
+	public function testChoiceWithMaxRetriesThrowsExceptionWithoutDefault(): void
+	{
+		$mock = $this->getMockBuilder( StdinInputReader::class )
+			->setConstructorArgs( [$this->output] )
+			->onlyMethods( ['prompt'] )
+			->getMock();
+
+		// All responses will be invalid
+		$mock->expects( $this->exactly( 10 ) ) // MAX_RETRY_ATTEMPTS
+			->method( 'prompt' )
+			->willReturn( 'invalid' );
+
+		$options = ['dev', 'staging', 'prod'];
+
+		$this->expectException( \RuntimeException::class );
+		$this->expectExceptionMessage( 'Maximum retry attempts exceeded and no default value provided' );
+
+		$mock->choice( 'Select:', $options ); // No default
+	}
+
+	public function testChoiceSucceedsBeforeMaxRetries(): void
+	{
+		$mock = $this->getMockBuilder( StdinInputReader::class )
+			->setConstructorArgs( [$this->output] )
+			->onlyMethods( ['prompt'] )
+			->getMock();
+
+		// First 3 invalid, then valid on 4th attempt
+		$mock->expects( $this->exactly( 4 ) )
+			->method( 'prompt' )
+			->willReturnOnConsecutiveCalls( 'invalid', 'bad', 'nope', 'staging' );
+
+		$options = ['dev', 'staging', 'prod'];
+		$result = $mock->choice( 'Select:', $options );
+
+		// Should succeed with valid response before hitting max retries
+		$this->assertEquals( 'staging', $result );
 	}
 }

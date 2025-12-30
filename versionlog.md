@@ -1,5 +1,11 @@
 ## 0.8.9
-* Testability refactoring.
+* Testability refactoring: Added IInputReader abstraction for testing CLI commands with user input.
+* Fixed potential stack overflow in StdinInputReader::choice() by replacing recursive retry with iterative loop.
+* Added MAX_RETRY_ATTEMPTS constant to prevent infinite loops on invalid input.
+* Fixed empty() bug where '0' was incorrectly treated as empty response.
+* Added defensive guard in Command::getInputReader() to prevent uninitialized property access by lazily initializing Output when needed.
+* CRITICAL: Added exception safety to secret() method with try-finally to ensure terminal echo is always restored, preventing broken terminal states.
+* CRITICAL: Added TTY check (isTty() method) to prevent stty errors in non-interactive environments (CI/CD, piped input, automated scripts).
 
 ## 0.8.8 2025-11-28
 ## 0.8.7 2025-11-24

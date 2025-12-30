@@ -202,6 +202,27 @@ class CommandTest extends TestCase
 		$this->assertInstanceOf( IInputReader::class, $reader );
 	}
 
+	public function testGetInputReaderCreatesDefaultOutputWhenNotSet(): void
+	{
+		// Don't set output - should auto-initialize
+		// Access protected method using reflection
+		$reflection = new \ReflectionClass( $this->command );
+		$method = $reflection->getMethod( 'getInputReader' );
+		$method->setAccessible( true );
+
+		// Should not throw exception even though output wasn't set
+		$reader = $method->invoke( $this->command );
+
+		$this->assertInstanceOf( IInputReader::class, $reader );
+
+		// Verify output was auto-initialized
+		$outputProp = $reflection->getProperty( 'output' );
+		$outputProp->setAccessible( true );
+		$output = $outputProp->getValue( $this->command );
+
+		$this->assertInstanceOf( Output::class, $output );
+	}
+
 	public function testGetInputReaderReturnsInjectedReader(): void
 	{
 		$inputReader = new TestInputReader();
@@ -329,6 +350,36 @@ class CommandTest extends TestCase
 		$result = $command->callChoice( 'Select:', $options, 'dev' );
 
 		$this->assertEquals( 'dev', $result );
+	}
+
+	public function testPromptWorksWithoutOutputSet(): void
+	{
+		// Test that prompt works even if setOutput() was never called
+		$inputReader = new TestInputReader();
+		$inputReader->addResponse( 'test' );
+
+		$command = new InteractiveTestCommand();
+		$command->setInputReader( $inputReader );
+
+		// Should not throw exception even though output wasn't set
+		$result = $command->callPrompt( 'Enter: ' );
+
+		$this->assertEquals( 'test', $result );
+	}
+
+	public function testConfirmWorksWithoutOutputSet(): void
+	{
+		// Test that confirm works even if setOutput() was never called
+		$inputReader = new TestInputReader();
+		$inputReader->addResponse( 'yes' );
+
+		$command = new InteractiveTestCommand();
+		$command->setInputReader( $inputReader );
+
+		// Should not throw exception even though output wasn't set
+		$result = $command->callConfirm( 'Continue?' );
+
+		$this->assertTrue( $result );
 	}
 }
 

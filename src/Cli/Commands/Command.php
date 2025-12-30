@@ -311,11 +311,18 @@ abstract class Command
 	 * Creates a default StdinInputReader if not already set.
 	 * This enables testable CLI commands by abstracting user input.
 	 *
+	 * If output hasn't been set, a default Output instance will be created automatically.
+	 *
 	 * @return IInputReader
 	 */
 	protected function getInputReader(): IInputReader
 	{
 		if( !$this->inputReader ) {
+			// Ensure output is initialized before creating StdinInputReader
+			if( !isset( $this->output ) ) {
+				$this->output = new Output();
+			}
+
 			$this->inputReader = new StdinInputReader( $this->output );
 		}
 
