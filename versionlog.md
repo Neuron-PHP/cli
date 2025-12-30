@@ -1,4 +1,4 @@
-## 0.8.9
+## 0.8.9 2025-12-30
 * Testability refactoring: Added IInputReader abstraction for testing CLI commands with user input.
 * Fixed potential stack overflow in StdinInputReader::choice() by replacing recursive retry with iterative loop.
 * Added MAX_RETRY_ATTEMPTS constant to prevent infinite loops on invalid input.
