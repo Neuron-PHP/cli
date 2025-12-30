@@ -184,4 +184,25 @@ class TestInputReaderTest extends TestCase
 		$this->assertInstanceOf( TestInputReader::class, $result );
 		$this->assertEquals( 2, $this->reader->getRemainingResponseCount() );
 	}
+
+	public function testConfirmTreatsZeroAsNegativeResponse(): void
+	{
+		// PHP's empty('0') returns true, but we want '0' to be treated
+		// as a negative response, not as empty
+		$this->reader->addResponse( '0' );
+
+		$result = $this->reader->confirm( 'Continue?', true );
+
+		$this->assertFalse( $result, "Response '0' should be treated as negative, not as empty" );
+	}
+
+	public function testChoiceCanSelectIndexZero(): void
+	{
+		// Ensure '0' can be used to select the first option
+		$this->reader->addResponse( '0' );
+
+		$result = $this->reader->choice( 'Select:', ['first', 'second', 'third'] );
+
+		$this->assertEquals( 'first', $result );
+	}
 }

@@ -148,7 +148,7 @@ class TestInputReader implements IInputReader
 		$response = $this->prompt( $message );
 
 		// If response is empty, use default
-		if( empty( $response ) ) {
+		if( $response === '' ) {
 			return $default;
 		}
 
@@ -174,7 +174,7 @@ class TestInputReader implements IInputReader
 		$response = $this->prompt( $message );
 
 		// If response is empty and there's a default, use it
-		if( empty( $response ) && $default !== null ) {
+		if( $response === '' && $default !== null ) {
 			return $default;
 		}
 

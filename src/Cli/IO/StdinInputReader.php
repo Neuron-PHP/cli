@@ -40,7 +40,7 @@ class StdinInputReader implements IInputReader
 		$response = $this->prompt( $message . $suffix );
 
 		// If user just presses enter, use default
-		if( empty( $response ) ) {
+		if( $response === '' ) {
 			return $default;
 		}
 
@@ -95,7 +95,7 @@ class StdinInputReader implements IInputReader
 		$response = $this->prompt( $prompt );
 
 		// If user just presses enter and there's a default, use it
-		if( empty( $response ) && $default !== null ) {
+		if( $response === '' && $default !== null ) {
 			return $default;
 		}
 
