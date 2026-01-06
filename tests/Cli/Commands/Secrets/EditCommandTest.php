@@ -208,6 +208,70 @@ class EditCommandTest extends TestCase
 	}
 
 	/**
+	 * Test editor option handling with various input types
+	 */
+	public function testEditorOptionHandling(): void
+	{
+		// Create a key file first
+		$keyPath = $this->testConfigPath . '/master.key';
+		$secretManager = new SecretManager();
+		$secretManager->generateKey( $keyPath );
+
+		// Create initial credentials file
+		$credentialsPath = $this->testConfigPath . '/secrets.yml.enc';
+		$tempPlaintextPath = $this->testConfigPath . '/temp.yml';
+		file_put_contents( $tempPlaintextPath, "test: value" );
+		$secretManager->encrypt( $tempPlaintextPath, $credentialsPath, $keyPath );
+		unlink( $tempPlaintextPath );
+
+		// Test 1: Editor option with value
+		$input1 = new Input( [
+			'--config=' . $this->testConfigPath,
+			'--editor=echo'  // Use echo as a no-op editor
+		] );
+		$input1->parse( $this->command );
+
+		$output1 = new Output( false );
+		$this->command->setInput( $input1 );
+		$this->command->setOutput( $output1 );
+
+		// This should use 'echo' as editor
+		ob_start();
+		$result1 = $this->command->execute();
+		$outputContent1 = ob_get_clean();
+
+		// Should succeed with echo editor
+		$this->assertEquals( 0, $result1 );
+		$this->assertStringContainsString( "Secrets saved to", $outputContent1 );
+
+		// Test 2: Editor option without value (becomes boolean true)
+		$input2 = new Input( [
+			'--config=' . $this->testConfigPath,
+			'--editor'  // No value - becomes boolean true
+		] );
+		$input2->parse( $this->command );
+
+		$output2 = new Output( false );
+		$this->command->setInput( $input2 );
+		$this->command->setOutput( $output2 );
+
+		// This should fall back to EDITOR env var or 'vi'
+		// Set a test editor to avoid vi
+		putenv( 'EDITOR=echo' );
+
+		ob_start();
+		$result2 = $this->command->execute();
+		$outputContent2 = ob_get_clean();
+
+		// Should succeed with fallback to env var
+		$this->assertEquals( 0, $result2 );
+		$this->assertStringContainsString( "Secrets saved to", $outputContent2 );
+
+		// Clean up env var
+		putenv( 'EDITOR' );
+	}
+
+	/**
 	 * Test that error is handled gracefully
 	 */
 	public function testExecuteWithError(): void

@@ -103,10 +103,12 @@ class ShowCommand extends Command
 		}
 
 		// Create SecretManager and decrypt
+		// Note: SecretManager::show() internally calls readKey() which handles both file and environment variable sources
 		$this->secretManager = new SecretManager();
 
 		try
 		{
+			// The show() method will read the key from either the file or environment variable
 			$decrypted = $this->secretManager->show( $credentialsPath, $keyPath );
 			$data = Yaml::parse( $decrypted );
 

@@ -56,7 +56,17 @@ class EditCommand extends Command
 	{
 		$configPath = $this->input->getOption( 'config', 'config' );
 		$env = $this->input->getOption( 'env' );
-		$editor = $this->input->getOption( 'editor' ) ?? getenv( 'EDITOR' ) ?: 'vi';
+
+		// Handle editor option - could be null, true (flag without value), or a string
+		$editorOption = $this->input->getOption( 'editor' );
+		if( is_string( $editorOption ) && $editorOption !== '' )
+		{
+			$editor = $editorOption;
+		}
+		else
+		{
+			$editor = getenv( 'EDITOR' ) ?: 'vi';
+		}
 
 		// Determine paths based on environment
 		if( $env )
@@ -106,8 +116,10 @@ class EditCommand extends Command
 			{
 				$this->output->success( "Secrets saved to: {$credentialsPath}" );
 
-				// First time setup reminder
-				if( !$env && !file_exists( $configPath . '/.gitignore' ) )
+				// First time setup reminder - check for .gitignore in project root
+				$projectRoot = dirname( $configPath );
+				$gitignorePath = $projectRoot . '/.gitignore';
+				if( !$env && !file_exists( $gitignorePath ) )
 				{
 					$this->output->newLine();
 					$this->output->warning( "Remember to:" );
