@@ -47,6 +47,7 @@ class GenerateCommand extends Command
 		$this->addOption( 'config', 'c', true, 'Config directory path (default: config)' );
 		$this->addOption( 'force', 'f', false, 'Overwrite existing key file' );
 		$this->addOption( 'show', 's', false, 'Display the generated key' );
+		$this->addOption( 'verbose', 'v', false, 'Verbose output' );
 	}
 
 	/**

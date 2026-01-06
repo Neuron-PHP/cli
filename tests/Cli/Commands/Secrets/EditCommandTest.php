@@ -160,16 +160,65 @@ class EditCommandTest extends TestCase
 	}
 
 	/**
+	 * Test that environment directory is created when missing
+	 */
+	public function testExecuteCreatesEnvironmentDirectory(): void
+	{
+		// Do NOT create the secrets directory - let the command create it
+
+		// Create input with options
+		$input = new Input( [
+			'--config=' . $this->testConfigPath,
+			'--env=staging',
+			'--editor=echo' // Use echo as a no-op editor
+		] );
+		$input->parse( $this->command );
+
+		// Create output
+		$output = new Output( false );
+
+		$this->command->setInput( $input );
+		$this->command->setOutput( $output );
+
+		// Capture output
+		ob_start();
+		$result = $this->command->execute();
+		$outputContent = ob_get_clean();
+
+		$secretsDir = $this->testConfigPath . '/secrets';
+		$keyPath = $secretsDir . '/staging.key';
+		$credentialsPath = $secretsDir . '/staging.yml.enc';
+
+		// Execute should succeed
+		$this->assertEquals( 0, $result );
+
+		// Directory should be created
+		$this->assertDirectoryExists( $secretsDir );
+
+		// Key and credentials should be generated
+		$this->assertFileExists( $keyPath );
+		$this->assertFileExists( $credentialsPath );
+
+		// Check output messages
+		$this->assertStringContainsString( 'Editing staging environment secrets...', $outputContent );
+		$this->assertStringContainsString( "Key file not found at: {$keyPath}", $outputContent );
+		$this->assertStringContainsString( "Generating new encryption key...", $outputContent );
+		$this->assertStringContainsString( "Generated new key at: {$keyPath}", $outputContent );
+		$this->assertStringContainsString( "Secrets saved to: {$credentialsPath}", $outputContent );
+	}
+
+	/**
 	 * Test that error is handled gracefully
 	 */
 	public function testExecuteWithError(): void
 	{
-		// Use a path that will cause an error (non-writable)
-		$badPath = '/root/cannot_write_here';
+		// Create a non-writable directory
+		$nonWritablePath = sys_get_temp_dir() . '/test_non_writable_' . uniqid();
+		mkdir( $nonWritablePath, 0000, true ); // Create with no permissions
 
-		// Create input with options
+		// Create input with options pointing to the non-writable path
 		$input = new Input( [
-			'--config=' . $badPath
+			'--config=' . $nonWritablePath
 		] );
 		$input->parse( $this->command );
 
@@ -189,6 +238,10 @@ class EditCommandTest extends TestCase
 
 		// Check error message
 		$this->assertStringContainsString( 'Error editing secrets:', $outputContent );
+
+		// Clean up: restore permissions and remove directory
+		chmod( $nonWritablePath, 0755 );
+		rmdir( $nonWritablePath );
 	}
 
 	/**

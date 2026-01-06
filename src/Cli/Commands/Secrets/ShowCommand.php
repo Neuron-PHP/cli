@@ -48,6 +48,7 @@ class ShowCommand extends Command
 		$this->addOption( 'key', 'k', true, 'Show only specific key/section' );
 		$this->addOption( 'config', 'c', true, 'Config directory path (default: config)' );
 		$this->addOption( 'force', 'f', false, 'Skip confirmation prompt' );
+		$this->addOption( 'verbose', 'v', false, 'Verbose output' );
 	}
 
 	/**
@@ -65,7 +66,7 @@ class ShowCommand extends Command
 		{
 			$this->output->warning( "You are about to display production secrets!" );
 
-			if( !$this->output->confirm( "Are you sure you want to continue?" ) )
+			if( !$this->confirm( "Are you sure you want to continue?" ) )
 			{
 				$this->output->info( "Operation cancelled." );
 				return 0;

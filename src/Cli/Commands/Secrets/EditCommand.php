@@ -46,6 +46,7 @@ class EditCommand extends Command
 		$this->addOption( 'env', 'e', true, 'Environment to edit (default: base secrets)' );
 		$this->addOption( 'editor', null, true, 'Editor to use (default: vi)' );
 		$this->addOption( 'config', 'c', true, 'Config directory path (default: config)' );
+		$this->addOption( 'verbose', 'v', false, 'Verbose output' );
 	}
 
 	/**
@@ -81,6 +82,17 @@ class EditCommand extends Command
 			{
 				$this->output->warning( "Key file not found at: {$keyPath}" );
 				$this->output->info( "Generating new encryption key..." );
+
+				// Ensure directory exists
+				$dir = dirname( $keyPath );
+				if( !is_dir( $dir ) )
+				{
+					if( !mkdir( $dir, 0755, true ) )
+					{
+						$this->output->error( "Failed to create directory: {$dir}" );
+						return 1;
+					}
+				}
 
 				$key = $this->secretManager->generateKey( $keyPath );
 				$this->output->success( "Generated new key at: {$keyPath}" );

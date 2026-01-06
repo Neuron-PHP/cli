@@ -7,6 +7,7 @@ use Neuron\Data\Settings\SecretManager;
 use PHPUnit\Framework\TestCase;
 use Neuron\Cli\Console\Input;
 use Neuron\Cli\Console\Output;
+use Neuron\Cli\IO\TestInputReader;
 
 class ShowCommandTest extends TestCase
 {
@@ -133,6 +134,103 @@ class ShowCommandTest extends TestCase
 		// Check output contains only the database key
 		$this->assertStringContainsString( 'database:', $outputContent );
 		$this->assertStringNotContainsString( 'api:', $outputContent );
+	}
+
+	/**
+	 * Test production environment confirmation prompt
+	 */
+	public function testExecuteProductionConfirmation(): void
+	{
+		// Create test secrets for production environment
+		mkdir( $this->testConfigPath . '/secrets', 0755, true );
+		$keyPath = $this->testConfigPath . '/secrets/production.key';
+		$credentialsPath = $this->testConfigPath . '/secrets/production.yml.enc';
+
+		$key = $this->secretManager->generateKey( $keyPath );
+
+		$tempPlaintextPath = $this->testConfigPath . '/temp_plaintext.yml';
+		$testData = "database:\n  password: production_secret";
+		file_put_contents( $tempPlaintextPath, $testData );
+		$this->secretManager->encrypt( $tempPlaintextPath, $credentialsPath, $keyPath );
+		unlink( $tempPlaintextPath );
+
+		// Test 1: User confirms - secrets should be shown
+		$input = new Input( [
+			'--config=' . $this->testConfigPath,
+			'--env=production'
+		] );
+		$input->parse( $this->command );
+
+		$output = new Output( false );
+
+		// Set up test input reader to confirm
+		$inputReader = new TestInputReader();
+		$inputReader->addResponse( 'yes' );
+
+		$this->command->setInput( $input );
+		$this->command->setOutput( $output );
+		$this->command->setInputReader( $inputReader );
+
+		// Capture output
+		ob_start();
+		$result = $this->command->execute();
+		$outputContent = ob_get_clean();
+
+		// Should succeed and show secrets
+		$this->assertEquals( 0, $result );
+		$this->assertStringContainsString( 'You are about to display production secrets!', $outputContent );
+		$this->assertStringContainsString( 'production_secret', $outputContent );
+
+		// Test 2: User cancels - secrets should NOT be shown
+		$input2 = new Input( [
+			'--config=' . $this->testConfigPath,
+			'--env=production'
+		] );
+		$input2->parse( $this->command );
+
+		$output2 = new Output( false );
+
+		// Set up test input reader to cancel
+		$inputReader2 = new TestInputReader();
+		$inputReader2->addResponse( 'no' );
+
+		$this->command->setInput( $input2 );
+		$this->command->setOutput( $output2 );
+		$this->command->setInputReader( $inputReader2 );
+
+		// Capture output
+		ob_start();
+		$result2 = $this->command->execute();
+		$outputContent2 = ob_get_clean();
+
+		// Should exit gracefully without showing secrets
+		$this->assertEquals( 0, $result2 );
+		$this->assertStringContainsString( 'Operation cancelled.', $outputContent2 );
+		$this->assertStringNotContainsString( 'production_secret', $outputContent2 );
+
+		// Test 3: Force flag should skip confirmation
+		$input3 = new Input( [
+			'--config=' . $this->testConfigPath,
+			'--env=production',
+			'--force'
+		] );
+		$input3->parse( $this->command );
+
+		$output3 = new Output( false );
+
+		$this->command->setInput( $input3 );
+		$this->command->setOutput( $output3 );
+		// No input reader needed - force skips confirmation
+
+		// Capture output
+		ob_start();
+		$result3 = $this->command->execute();
+		$outputContent3 = ob_get_clean();
+
+		// Should succeed without confirmation prompt
+		$this->assertEquals( 0, $result3 );
+		$this->assertStringNotContainsString( 'You are about to display production secrets!', $outputContent3 );
+		$this->assertStringContainsString( 'production_secret', $outputContent3 );
 	}
 
 	/**
