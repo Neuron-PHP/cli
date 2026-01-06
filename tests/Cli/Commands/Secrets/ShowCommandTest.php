@@ -234,6 +234,55 @@ class ShowCommandTest extends TestCase
 	}
 
 	/**
+	 * Test showing secrets using environment variable for key
+	 */
+	public function testExecuteWithEnvironmentVariable(): void
+	{
+		// Create test secrets
+		$keyPath = $this->testConfigPath . '/master.key';
+		$credentialsPath = $this->testConfigPath . '/secrets.yml.enc';
+
+		// Generate a key and store it
+		$key = $this->secretManager->generateKey( $keyPath );
+
+		// Create encrypted secrets
+		$tempPlaintextPath = $this->testConfigPath . '/temp_plaintext.yml';
+		$testData = "database:\n  host: localhost\n  password: env_secret";
+		file_put_contents( $tempPlaintextPath, $testData );
+		$this->secretManager->encrypt( $tempPlaintextPath, $credentialsPath, $keyPath );
+		unlink( $tempPlaintextPath );
+
+		// Read the key value and delete the key file
+		$keyValue = trim( file_get_contents( $keyPath ) );
+		unlink( $keyPath );
+
+		// Set the key as an environment variable
+		putenv( "NEURON_MASTER_KEY={$keyValue}" );
+
+		// Create input and output
+		$input = new Input( [ '--config=' . $this->testConfigPath ] );
+		$input->parse( $this->command );
+
+		$output = new Output( false );
+
+		$this->command->setInput( $input );
+		$this->command->setOutput( $output );
+
+		// Capture output
+		ob_start();
+		$result = $this->command->execute();
+		$outputContent = ob_get_clean();
+
+		// Should succeed using the environment variable
+		$this->assertEquals( 0, $result );
+		$this->assertStringContainsString( 'Base Secrets', $outputContent );
+		$this->assertStringContainsString( 'env_secret', $outputContent );
+
+		// Clean up environment variable
+		putenv( "NEURON_MASTER_KEY" );
+	}
+
+	/**
 	 * Test error when secrets file not found
 	 */
 	public function testExecuteErrorWhenSecretsFileNotFound(): void

@@ -122,6 +122,111 @@ class GenerateCommandTest extends TestCase
 	}
 
 	/**
+	 * Test that config directory is created for master key when missing
+	 */
+	public function testExecuteCreatesMasterKeyDirectory(): void
+	{
+		// Use a non-existent config path
+		$nonExistentPath = sys_get_temp_dir() . '/test_config_' . uniqid() . '/config';
+
+		// Create input with options pointing to non-existent path
+		$input = new Input( [ '--config=' . $nonExistentPath ] );
+		$input->parse( $this->command );
+
+		// Create output
+		$output = new Output( false );
+
+		$this->command->setInput( $input );
+		$this->command->setOutput( $output );
+
+		// Capture output
+		ob_start();
+		$result = $this->command->execute();
+		$outputContent = ob_get_clean();
+
+		// Execute should succeed
+		$this->assertEquals( 0, $result );
+
+		// Directory should be created
+		$this->assertDirectoryExists( $nonExistentPath );
+
+		// Key file should exist
+		$keyPath = $nonExistentPath . '/master.key';
+		$this->assertFileExists( $keyPath );
+
+		// Check output contains success message
+		$this->assertStringContainsString( "Generated master key at: {$keyPath}", $outputContent );
+
+		// Clean up
+		unlink( $keyPath );
+		rmdir( $nonExistentPath );
+		rmdir( dirname( $nonExistentPath ) );
+	}
+
+	/**
+	 * Test that key is only shown when --show flag is used
+	 */
+	public function testKeyOnlyShownWithShowFlag(): void
+	{
+		// Test WITHOUT --show flag (default)
+		$input = new Input( [ '--config=' . $this->testConfigPath ] );
+		$input->parse( $this->command );
+
+		$output = new Output( false );
+
+		$this->command->setInput( $input );
+		$this->command->setOutput( $output );
+
+		ob_start();
+		$result = $this->command->execute();
+		$outputContentNoShow = ob_get_clean();
+
+		$this->assertEquals( 0, $result );
+
+		$keyPath = $this->testConfigPath . '/master.key';
+		$this->assertFileExists( $keyPath );
+
+		// Read the actual key
+		$actualKey = file_get_contents( $keyPath );
+
+		// Key should NOT be in the output (except in the placeholder)
+		$this->assertStringNotContainsString( "export NEURON_MASTER_KEY={$actualKey}", $outputContentNoShow );
+		$this->assertStringContainsString( "export NEURON_MASTER_KEY=<KEY_FROM_{$keyPath}>", $outputContentNoShow );
+		$this->assertStringNotContainsString( "Generated Key", $outputContentNoShow );
+
+		// Clean up before second test
+		unlink( $keyPath );
+
+		// Test WITH --show flag
+		$input2 = new Input( [
+			'--config=' . $this->testConfigPath,
+			'--show'
+		] );
+		$input2->parse( $this->command );
+
+		$output2 = new Output( false );
+
+		$this->command->setInput( $input2 );
+		$this->command->setOutput( $output2 );
+
+		ob_start();
+		$result2 = $this->command->execute();
+		$outputContentWithShow = ob_get_clean();
+
+		$this->assertEquals( 0, $result2 );
+
+		// Read the new key
+		$actualKey2 = file_get_contents( $keyPath );
+
+		// Key SHOULD be in the output
+		$this->assertStringContainsString( "export NEURON_MASTER_KEY={$actualKey2}", $outputContentWithShow );
+		$this->assertStringNotContainsString( "<KEY_FROM_", $outputContentWithShow );
+		$this->assertStringContainsString( "Generated Key", $outputContentWithShow );
+		$this->assertStringContainsString( $actualKey2, $outputContentWithShow );
+		$this->assertStringContainsString( "This key is shown only once", $outputContentWithShow );
+	}
+
+	/**
 	 * Test error when key already exists without force
 	 */
 	public function testExecuteErrorWhenKeyExistsWithoutForce(): void

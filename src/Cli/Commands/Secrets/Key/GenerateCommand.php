@@ -81,6 +81,17 @@ class GenerateCommand extends Command
 		{
 			$keyPath = $configPath . '/master.key';
 			$keyName = 'master key';
+
+			// Ensure directory exists
+			$dir = dirname( $keyPath );
+			if( !is_dir( $dir ) )
+			{
+				if( !mkdir( $dir, 0755, true ) )
+				{
+					$this->output->error( "Failed to create directory: {$dir}" );
+					return 1;
+				}
+			}
 		}
 
 		// Check if key already exists
@@ -137,7 +148,14 @@ class GenerateCommand extends Command
 			) . '_KEY';
 			$this->output->newLine();
 			$this->output->info( "Alternative: Set the key as an environment variable:" );
-			$this->output->write( "export {$envVar}={$key}" );
+			if( $show )
+			{
+				$this->output->write( "export {$envVar}={$key}" );
+			}
+			else
+			{
+				$this->output->write( "export {$envVar}=<KEY_FROM_{$keyPath}>" );
+			}
 		}
 		catch( \Exception $e )
 		{

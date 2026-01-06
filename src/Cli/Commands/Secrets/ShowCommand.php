@@ -163,6 +163,6 @@ class ShowCommand extends Command
 			str_replace( ['/', '.', '-'], '_', basename( $keyPath, '.key' ) )
 		) . '_KEY';
 
-		return isset( $_ENV[$envKey] );
+		return getenv( $envKey ) !== false;
 	}
 }

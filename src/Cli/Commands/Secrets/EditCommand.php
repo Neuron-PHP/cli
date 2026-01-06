@@ -56,7 +56,7 @@ class EditCommand extends Command
 	{
 		$configPath = $this->input->getOption( 'config', 'config' );
 		$env = $this->input->getOption( 'env' );
-		$editor = $this->input->getOption( 'editor' ) ?? $_ENV['EDITOR'] ?? 'vi';
+		$editor = $this->input->getOption( 'editor' ) ?? getenv( 'EDITOR' ) ?: 'vi';
 
 		// Determine paths based on environment
 		if( $env )
@@ -94,7 +94,7 @@ class EditCommand extends Command
 					}
 				}
 
-				$key = $this->secretManager->generateKey( $keyPath );
+				$this->secretManager->generateKey( $keyPath );
 				$this->output->success( "Generated new key at: {$keyPath}" );
 				$this->output->warning( "IMPORTANT: Add {$keyPath} to .gitignore!" );
 			}
