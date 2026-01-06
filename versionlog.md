@@ -1,3 +1,6 @@
+## 0.8.10 2026-01-06
+* Added secret commands.
+
 ## 0.8.9 2025-12-30
 * Testability refactoring: Added IInputReader abstraction for testing CLI commands with user input.
 * Fixed potential stack overflow in StdinInputReader::choice() by replacing recursive retry with iterative loop.
