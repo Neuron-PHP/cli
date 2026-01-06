@@ -1,3 +1,5 @@
+## 0.8.11
+
 ## 0.8.10 2026-01-06
 * Added secret commands.
 
