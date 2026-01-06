@@ -267,6 +267,11 @@ class Application extends Base
         $this->register( 'version', Commands\Core\VersionCommand::class );
         $this->register( 'list', Commands\Core\ComponentListCommand::class );
         $this->register( 'config:env', Commands\Core\ConfigEnvCommand::class );
+
+        // Secrets commands
+        $this->register( 'secrets:edit', Commands\Secrets\EditCommand::class );
+        $this->register( 'secrets:show', Commands\Secrets\ShowCommand::class );
+        $this->register( 'secrets:key:generate', Commands\Secrets\Key\GenerateCommand::class );
     }
 
 	/**
