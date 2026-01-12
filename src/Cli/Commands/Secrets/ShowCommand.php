@@ -61,6 +61,13 @@ class ShowCommand extends Command
 		$specificKey = $this->input->getOption( 'key' );
 		$force = $this->input->hasOption( 'force' );
 
+		// Validate environment name to prevent path traversal
+		if( $env && !preg_match( '/^[a-zA-Z0-9_-]+$/', $env ) )
+		{
+			$this->output->error( "Invalid environment name. Only letters, numbers, hyphens, and underscores are allowed." );
+			return 1;
+		}
+
 		// Security confirmation for production
 		if( !$force && $env === 'production' )
 		{
@@ -76,8 +83,8 @@ class ShowCommand extends Command
 		// Determine paths based on environment
 		if( $env )
 		{
-			$credentialsPath = $configPath . '/secrets/' . $env . '.yml.enc';
-			$keyPath = $configPath . '/secrets/' . $env . '.key';
+			$credentialsPath = $configPath . '/environments/' . $env . '.secrets.yml.enc';
+			$keyPath = $configPath . '/environments/' . $env . '.key';
 			$title = ucfirst( $env ) . " Environment Secrets";
 		}
 		else

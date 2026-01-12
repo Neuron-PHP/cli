@@ -142,9 +142,9 @@ class ShowCommandTest extends TestCase
 	public function testExecuteProductionConfirmation(): void
 	{
 		// Create test secrets for production environment
-		mkdir( $this->testConfigPath . '/secrets', 0755, true );
-		$keyPath = $this->testConfigPath . '/secrets/production.key';
-		$credentialsPath = $this->testConfigPath . '/secrets/production.yml.enc';
+		mkdir( $this->testConfigPath . '/environments', 0755, true );
+		$keyPath = $this->testConfigPath . '/environments/production.key';
+		$credentialsPath = $this->testConfigPath . '/environments/production.secrets.yml.enc';
 
 		$key = $this->secretManager->generateKey( $keyPath );
 

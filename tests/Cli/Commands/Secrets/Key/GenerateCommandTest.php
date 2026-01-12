@@ -113,8 +113,8 @@ class GenerateCommandTest extends TestCase
 		$this->assertEquals( 0, $result );
 
 		// Directory and key file should exist
-		$this->assertDirectoryExists( $this->testConfigPath . '/secrets' );
-		$keyPath = $this->testConfigPath . '/secrets/production.key';
+		$this->assertDirectoryExists( $this->testConfigPath . '/environments' );
+		$keyPath = $this->testConfigPath . '/environments/production.key';
 		$this->assertFileExists( $keyPath );
 
 		// Check output contains success message
