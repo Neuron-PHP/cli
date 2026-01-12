@@ -57,6 +57,13 @@ class EditCommand extends Command
 		$configPath = $this->input->getOption( 'config', 'config' );
 		$env = $this->input->getOption( 'env' );
 
+		// Validate environment name to prevent path traversal
+		if( $env && !preg_match( '/^[a-zA-Z0-9_-]+$/', $env ) )
+		{
+			$this->output->error( "Invalid environment name. Only letters, numbers, hyphens, and underscores are allowed." );
+			return 1;
+		}
+
 		// Handle editor option - could be null, true (flag without value), or a string
 		$editorOption = $this->input->getOption( 'editor' );
 		if( is_string( $editorOption ) && $editorOption !== '' )
@@ -71,8 +78,8 @@ class EditCommand extends Command
 		// Determine paths based on environment
 		if( $env )
 		{
-			$credentialsPath = $configPath . '/secrets/' . $env . '.yml.enc';
-			$keyPath = $configPath . '/secrets/' . $env . '.key';
+			$credentialsPath = $configPath . '/environments/' . $env . '.secrets.yml.enc';
+			$keyPath = $configPath . '/environments/' . $env . '.key';
 			$this->output->info( "Editing {$env} environment secrets..." );
 		}
 		else

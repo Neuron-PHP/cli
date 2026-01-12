@@ -60,10 +60,17 @@ class GenerateCommand extends Command
 		$force = $this->input->hasOption( 'force' );
 		$show = $this->input->hasOption( 'show' );
 
+		// Validate environment name to prevent path traversal
+		if( $env && !preg_match( '/^[a-zA-Z0-9_-]+$/', $env ) )
+		{
+			$this->output->error( "Invalid environment name. Only letters, numbers, hyphens, and underscores are allowed." );
+			return 1;
+		}
+
 		// Determine key path based on environment
 		if( $env )
 		{
-			$keyPath = $configPath . '/secrets/' . $env . '.key';
+			$keyPath = $configPath . '/environments/' . $env . '.key';
 			$keyName = $env . ' environment key';
 
 			// Ensure directory exists

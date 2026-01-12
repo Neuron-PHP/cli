@@ -143,8 +143,8 @@ class EditCommandTest extends TestCase
 		$result = $this->command->execute();
 		$outputContent = ob_get_clean();
 
-		$keyPath = $this->testConfigPath . '/secrets/production.key';
-		$credentialsPath = $this->testConfigPath . '/secrets/production.yml.enc';
+		$keyPath = $this->testConfigPath . '/environments/production.key';
+		$credentialsPath = $this->testConfigPath . '/environments/production.secrets.yml.enc';
 
 		// Execute should succeed
 		$this->assertEquals( 0, $result );
@@ -185,9 +185,9 @@ class EditCommandTest extends TestCase
 		$result = $this->command->execute();
 		$outputContent = ob_get_clean();
 
-		$secretsDir = $this->testConfigPath . '/secrets';
+		$secretsDir = $this->testConfigPath . '/environments';
 		$keyPath = $secretsDir . '/staging.key';
-		$credentialsPath = $secretsDir . '/staging.yml.enc';
+		$credentialsPath = $secretsDir . '/staging.secrets.yml.enc';
 
 		// Execute should succeed
 		$this->assertEquals( 0, $result );
