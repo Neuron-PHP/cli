@@ -6,6 +6,7 @@ use Neuron\Cli\Commands\Core\ComponentListCommand;
 use Neuron\Cli\Commands\Registry;
 use Neuron\Cli\Console\Input;
 use Neuron\Cli\Console\Output;
+use Neuron\Core\Registry\RegistryKeys;
 use PHPUnit\Framework\TestCase;
 
 class ComponentListCommandTest extends TestCase
@@ -73,7 +74,7 @@ class ComponentListCommandTest extends TestCase
 		$this->registry->register( 'test:command', 'Tests\Cli\Commands\Core\MockTestCommand' );
 		$this->registry->register( 'help', 'Neuron\Cli\Commands\Core\HelpCommand' );
 
-		\Neuron\Patterns\Registry::getInstance()->set( 'cli.application', $app );
+		\Neuron\Patterns\Registry::getInstance()->set( RegistryKeys::CLI_APPLICATION_LEGACY, $app );
 
 		$input = new Input( [] );
 		$input->parse( $this->command );
@@ -95,7 +96,7 @@ class ComponentListCommandTest extends TestCase
 		$this->registry->register( 'test:command', 'Tests\Cli\Commands\Core\MockTestCommand' );
 		$this->registry->register( 'help', 'Neuron\Cli\Commands\Core\HelpCommand' );
 
-		\Neuron\Patterns\Registry::getInstance()->set( 'cli.application', $app );
+		\Neuron\Patterns\Registry::getInstance()->set( RegistryKeys::CLI_APPLICATION_LEGACY, $app );
 
 		$input = new Input( ['--raw'] );
 		$input->parse( $this->command );
@@ -120,7 +121,7 @@ class ComponentListCommandTest extends TestCase
 		$this->registry->register( 'help', 'Neuron\Cli\Commands\Core\HelpCommand' );
 		$this->registry->register( 'other:command', 'Tests\Cli\Commands\Core\MockTestCommand' );
 
-		\Neuron\Patterns\Registry::getInstance()->set( 'cli.application', $app );
+		\Neuron\Patterns\Registry::getInstance()->set( RegistryKeys::CLI_APPLICATION_LEGACY, $app );
 
 		$input = new Input( ['--namespace=test'] );
 		$input->parse( $this->command );
@@ -142,7 +143,7 @@ class ComponentListCommandTest extends TestCase
 		$app = $this->createMockApplication();
 		// Don't register any commands
 
-		\Neuron\Patterns\Registry::getInstance()->set( 'cli.application', $app );
+		\Neuron\Patterns\Registry::getInstance()->set( RegistryKeys::CLI_APPLICATION_LEGACY, $app );
 
 		$input = new Input( [] );
 		$input->parse( $this->command );
@@ -161,7 +162,7 @@ class ComponentListCommandTest extends TestCase
 		$app = $this->createMockApplication();
 		$this->registry->register( 'test:command', 'Tests\Cli\Commands\Core\MockTestCommand' );
 
-		\Neuron\Patterns\Registry::getInstance()->set( 'cli.application', $app );
+		\Neuron\Patterns\Registry::getInstance()->set( RegistryKeys::CLI_APPLICATION_LEGACY, $app );
 
 		$input = new Input( ['--namespace=nonexistent'] );
 		$input->parse( $this->command );
@@ -183,7 +184,7 @@ class ComponentListCommandTest extends TestCase
 		$this->registry->register( 'test:command2', 'Tests\Cli\Commands\Core\MockTestCommand' );
 		$this->registry->register( 'other:command', 'Tests\Cli\Commands\Core\MockTestCommand' );
 
-		\Neuron\Patterns\Registry::getInstance()->set( 'cli.application', $app );
+		\Neuron\Patterns\Registry::getInstance()->set( RegistryKeys::CLI_APPLICATION_LEGACY, $app );
 
 		$input = new Input( ['--raw', '--namespace=test'] );
 		$input->parse( $this->command );
@@ -206,7 +207,7 @@ class ComponentListCommandTest extends TestCase
 		$this->registry->register( 'zebra:test', 'Tests\Cli\Commands\Core\MockTestCommand' );
 		$this->registry->register( 'alpha:test', 'Tests\Cli\Commands\Core\MockTestCommand' );
 
-		\Neuron\Patterns\Registry::getInstance()->set( 'cli.application', $app );
+		\Neuron\Patterns\Registry::getInstance()->set( RegistryKeys::CLI_APPLICATION_LEGACY, $app );
 
 		$input = new Input( [] );
 		$input->parse( $this->command );
