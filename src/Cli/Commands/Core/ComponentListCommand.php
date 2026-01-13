@@ -4,6 +4,7 @@ namespace Neuron\Cli\Commands\Core;
 
 use Neuron\Cli\Commands\Command;
 use Neuron\Cli\Commands\Registry;
+use Neuron\Core\Registry\RegistryKeys;
 
 /**
  * Lists all available commands organized by component
@@ -41,7 +42,7 @@ class ComponentListCommand extends Command
 	public function execute(): int
 	{
 		// Get the application from registry
-		$app = \Neuron\Patterns\Registry::getInstance()->get( 'cli.application' );
+		$app = \Neuron\Patterns\Registry::getInstance()->get( RegistryKeys::CLI_APPLICATION_LEGACY );
 		
 		if( !$app )
 		{

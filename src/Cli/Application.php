@@ -7,6 +7,7 @@ use Neuron\Cli\Commands\Registry;
 use Neuron\Cli\Console\Input;
 use Neuron\Cli\Console\Output;
 use Neuron\Cli\Loader\ComponentLoader;
+use Neuron\Core\Registry\RegistryKeys;
 use Neuron\Data\Settings\Source\ISettingSource;
 use Neuron\Log\Log;
 
@@ -131,8 +132,8 @@ class Application extends Base
 	protected function executeCommand(): void
 	{
 		// Store the application instance in the registry for commands to access
-		\Neuron\Patterns\Registry::getInstance()->set( 'cli.application', $this );
-		
+		\Neuron\Patterns\Registry::getInstance()->set( RegistryKeys::CLI_APPLICATION_LEGACY, $this );
+
 		// Check if command exists
 		if( !$this->commandRegistry->has( $this->commandName ) )
 		{
@@ -174,7 +175,7 @@ class Application extends Base
 			$exitCode = $command->execute();
 			
 			// Store exit code in registry for bin/neuron to retrieve
-			\Neuron\Patterns\Registry::getInstance()->set( 'cli.exit_code', $exitCode );
+			\Neuron\Patterns\Registry::getInstance()->set( RegistryKeys::CLI_EXIT_CODE_LEGACY, $exitCode );
 		}
 		catch( \Exception $e )
 		{
@@ -186,7 +187,7 @@ class Application extends Base
 			}
 			
 			// Store error exit code
-			\Neuron\Patterns\Registry::getInstance()->set( 'cli.exit_code', 1 );
+			\Neuron\Patterns\Registry::getInstance()->set( RegistryKeys::CLI_EXIT_CODE_LEGACY, 1 );
 		}
 	}
 
@@ -309,8 +310,8 @@ class Application extends Base
 	private function showCommandHelp( string $commandName ): void
 	{
 		// Store the application instance in the registry for commands to access
-		\Neuron\Patterns\Registry::getInstance()->set( 'cli.application', $this );
-		
+		\Neuron\Patterns\Registry::getInstance()->set( RegistryKeys::CLI_APPLICATION_LEGACY, $this );
+
 		if( !$this->commandRegistry->has( $commandName ) )
 		{
 			$this->output->error( "Command '{$commandName}' not found" );
@@ -370,6 +371,6 @@ class Application extends Base
 	 */
 	public function getExitCode(): int
 	{
-		return \Neuron\Patterns\Registry::getInstance()->get( 'cli.exit_code' ) ?? 0;
+		return \Neuron\Patterns\Registry::getInstance()->get( RegistryKeys::CLI_EXIT_CODE_LEGACY ) ?? 0;
 	}
 }

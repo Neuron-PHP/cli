@@ -3,6 +3,7 @@
 namespace Neuron\Cli\Commands\Core;
 
 use Neuron\Cli\Commands\Command;
+use Neuron\Core\Registry\RegistryKeys;
 use Neuron\Patterns\Registry;
 
 /**
@@ -49,7 +50,7 @@ class HelpCommand extends Command
 		}
 		
 		// Get the application from registry
-		$app = Registry::getInstance()->get( 'cli.application' );
+		$app = Registry::getInstance()->get( RegistryKeys::CLI_APPLICATION_LEGACY );
 		
 		if( !$app )
 		{

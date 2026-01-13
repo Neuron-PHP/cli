@@ -6,6 +6,7 @@ use Neuron\Cli\Commands\Core\HelpCommand;
 use Neuron\Cli\Commands\Registry;
 use Neuron\Cli\Console\Input;
 use Neuron\Cli\Console\Output;
+use Neuron\Core\Registry\RegistryKeys;
 use PHPUnit\Framework\TestCase;
 
 class HelpCommandTest extends TestCase
@@ -91,7 +92,7 @@ class HelpCommandTest extends TestCase
 	public function testExecuteWithoutApplicationInRegistry(): void
 	{
 		// Clear registry
-		\Neuron\Patterns\Registry::getInstance()->set( 'cli.application', null );
+		\Neuron\Patterns\Registry::getInstance()->set( RegistryKeys::CLI_APPLICATION_LEGACY, null );
 
 		$input = new Input( ['test:command'] );
 		$input->parse( $this->command );
@@ -111,7 +112,7 @@ class HelpCommandTest extends TestCase
 		$mockApp = $this->createMock( \Neuron\Cli\Application::class );
 		$mockApp->method( 'has' )->willReturn( false );
 
-		\Neuron\Patterns\Registry::getInstance()->set( 'cli.application', $mockApp );
+		\Neuron\Patterns\Registry::getInstance()->set( RegistryKeys::CLI_APPLICATION_LEGACY, $mockApp );
 
 		$input = new Input( ['nonexistent:command'] );
 		$input->parse( $this->command );
@@ -140,7 +141,7 @@ class HelpCommandTest extends TestCase
 		$mockApp->method( 'has' )->willReturn( true );
 		$mockApp->method( 'getRegistry' )->willReturn( $mockRegistry );
 
-		\Neuron\Patterns\Registry::getInstance()->set( 'cli.application', $mockApp );
+		\Neuron\Patterns\Registry::getInstance()->set( RegistryKeys::CLI_APPLICATION_LEGACY, $mockApp );
 
 		$input = new Input( ['test:command'] );
 		$input->parse( $this->command );
@@ -154,12 +155,12 @@ class HelpCommandTest extends TestCase
 		$this->assertStringContainsString( 'Command class not found', $output );
 
 		// Cleanup
-		\Neuron\Patterns\Registry::getInstance()->set( 'cli.application', null );
+		\Neuron\Patterns\Registry::getInstance()->set( RegistryKeys::CLI_APPLICATION_LEGACY, null );
 	}
 
 	protected function tearDown(): void
 	{
 		// Cleanup registry after each test
-		\Neuron\Patterns\Registry::getInstance()->set( 'cli.application', null );
+		\Neuron\Patterns\Registry::getInstance()->set( RegistryKeys::CLI_APPLICATION_LEGACY, null );
 	}
 }
