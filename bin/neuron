@@ -48,19 +48,28 @@ if( version_compare( PHP_VERSION, '8.4.0', '<' ) )
 }
 
 // Load configuration if available
+// Use SettingManagerFactory to load environment-specific configs and encrypted secrets
 $settings = null;
 $configPaths = [
-	getcwd() . '/config/neuron.yaml',
-	getcwd() . '/neuron.yaml',
+	getcwd() . '/config',
+	getcwd(),
 ];
 
 foreach( $configPaths as $configPath )
 {
-	if( file_exists( $configPath ) )
+	$neuronYaml = $configPath . '/neuron.yaml';
+
+	if( file_exists( $neuronYaml ) )
 	{
 		try
 		{
-			$settings = new \Neuron\Data\Settings\Source\Yaml( $configPath );
+			// Use SettingManagerFactory to load all configuration layers:
+			// - Base config (neuron.yaml)
+			// - Environment-specific config (environments/{env}.yaml)
+			// - Base secrets (secrets.yml.enc)
+			// - Environment-specific secrets (environments/{env}.secrets.yml.enc)
+			// - .env variables (fallback)
+			$settings = \Neuron\Data\Settings\SettingManagerFactory::create( null, $configPath );
 			break;
 		}
 		catch( \Exception $e )
