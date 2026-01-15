@@ -1,9 +1,9 @@
+## 0.8.14 2026-01-15
+* Cli now loads merged configurations correctly on boot.
+
 ## 0.8.13 2026-01-13
-
 ## 0.8.12 2026-01-12
-
 ## 0.8.11 2026-01-06
-
 ## 0.8.10 2026-01-06
 * Added secret commands.
 
