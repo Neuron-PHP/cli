@@ -1,4 +1,4 @@
-## 0.8.14
+## 0.8.14 2026-01-15
 * Cli now loads merged configurations correctly on boot.
 
 ## 0.8.13 2026-01-13
