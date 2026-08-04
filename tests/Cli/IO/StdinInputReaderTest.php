@@ -223,7 +223,6 @@ class StdinInputReaderTest extends TestCase
 		$reader = new StdinInputReader( $this->output );
 		$reflection = new \ReflectionClass( $reader );
 		$method = $reflection->getMethod( 'isTty' );
-		$method->setAccessible( true );
 
 		$result = $method->invoke( $reader );
 
