@@ -92,11 +92,9 @@ class CommandTest extends TestCase
 		$reflection = new \ReflectionClass( $this->command );
 		
 		$inputProp = $reflection->getProperty( 'input' );
-		$inputProp->setAccessible( true );
 		$this->assertSame( $input, $inputProp->getValue( $this->command ) );
 		
 		$outputProp = $reflection->getProperty( 'output' );
-		$outputProp->setAccessible( true );
 		$this->assertSame( $output, $outputProp->getValue( $this->command ) );
 	}
 	
@@ -182,7 +180,6 @@ class CommandTest extends TestCase
 		// Verify it was set using reflection
 		$reflection = new \ReflectionClass( $this->command );
 		$prop = $reflection->getProperty( 'inputReader' );
-		$prop->setAccessible( true );
 
 		$this->assertSame( $inputReader, $prop->getValue( $this->command ) );
 	}
@@ -195,7 +192,6 @@ class CommandTest extends TestCase
 		// Access protected method using reflection
 		$reflection = new \ReflectionClass( $this->command );
 		$method = $reflection->getMethod( 'getInputReader' );
-		$method->setAccessible( true );
 
 		$reader = $method->invoke( $this->command );
 
@@ -208,7 +204,6 @@ class CommandTest extends TestCase
 		// Access protected method using reflection
 		$reflection = new \ReflectionClass( $this->command );
 		$method = $reflection->getMethod( 'getInputReader' );
-		$method->setAccessible( true );
 
 		// Should not throw exception even though output wasn't set
 		$reader = $method->invoke( $this->command );
@@ -217,7 +212,6 @@ class CommandTest extends TestCase
 
 		// Verify output was auto-initialized
 		$outputProp = $reflection->getProperty( 'output' );
-		$outputProp->setAccessible( true );
 		$output = $outputProp->getValue( $this->command );
 
 		$this->assertInstanceOf( Output::class, $output );
@@ -231,7 +225,6 @@ class CommandTest extends TestCase
 		// Access protected method using reflection
 		$reflection = new \ReflectionClass( $this->command );
 		$method = $reflection->getMethod( 'getInputReader' );
-		$method->setAccessible( true );
 
 		$reader = $method->invoke( $this->command );
 

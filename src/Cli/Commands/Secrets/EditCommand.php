@@ -94,8 +94,10 @@ class EditCommand extends Command
 
 		try
 		{
-			// Ensure key exists
-			if( !file_exists( $keyPath ) )
+			// Ensure key exists (checks file, then falls back to the
+			// NEURON_{NAME}_KEY environment variable before assuming no key
+			// exists at all - matches secrets:show's behavior)
+			if( !file_exists( $keyPath ) && !$this->checkEnvironmentKey( $keyPath ) )
 			{
 				$this->output->warning( "Key file not found at: {$keyPath}" );
 				$this->output->info( "Generating new encryption key..." );
@@ -154,5 +156,20 @@ class EditCommand extends Command
 		}
 
 		return 0;
+	}
+
+	/**
+	 * Check if key exists in environment variable
+	 *
+	 * @param string $keyPath
+	 * @return bool
+	 */
+	private function checkEnvironmentKey( string $keyPath ): bool
+	{
+		$envKey = 'NEURON_' . strtoupper(
+			str_replace( ['/', '.', '-'], '_', basename( $keyPath, '.key' ) )
+		) . '_KEY';
+
+		return getenv( $envKey ) !== false;
 	}
 }

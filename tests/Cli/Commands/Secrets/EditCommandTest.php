@@ -208,6 +208,89 @@ class EditCommandTest extends TestCase
 	}
 
 	/**
+	 * Test that an existing key provided only via the NEURON_{ENV}_KEY
+	 * environment variable is used instead of generating (and overwriting
+	 * key resolution with) a brand new key file.
+	 *
+	 * Regression test: the command used to check only file_exists($keyPath)
+	 * before deciding no key existed, ignoring the environment variable
+	 * fallback that SecretManager::edit()/readKey() already honor. That
+	 * generated a throwaway key file which then shadowed the real
+	 * environment-provided key (file is checked before env var), and the
+	 * subsequent decrypt of the real secrets failed with a MAC error.
+	 */
+	public function testExecuteUsesEnvironmentKeyWithoutGeneratingNewOne(): void
+	{
+		// Encrypt a real secrets file using a key that will only be exposed
+		// via the environment variable - never written into testConfigPath.
+		$secretManager = new SecretManager();
+		$tempKeyPath = sys_get_temp_dir() . '/temp_env_key_' . uniqid();
+		$key = $secretManager->generateKey( $tempKeyPath );
+
+		mkdir( $this->testConfigPath . '/environments', 0755, true );
+		$credentialsPath = $this->testConfigPath . '/environments/production.secrets.yml.enc';
+		$tempPlaintextPath = $this->testConfigPath . '/temp_plaintext.yml';
+		file_put_contents( $tempPlaintextPath, "database:\n  password: real-secret" );
+		$secretManager->encrypt( $tempPlaintextPath, $credentialsPath, $tempKeyPath );
+		unlink( $tempPlaintextPath );
+		unlink( $tempKeyPath );
+
+		$keyPath = $this->testConfigPath . '/environments/production.key';
+		$this->assertFileDoesNotExist( $keyPath );
+
+		putenv( "NEURON_PRODUCTION_KEY={$key}" );
+
+		try
+		{
+			$input = new Input( [
+				'--config=' . $this->testConfigPath,
+				'--env=production',
+				'--editor=echo'
+			] );
+			$input->parse( $this->command );
+
+			$output = new Output( false );
+			$this->command->setInput( $input );
+			$this->command->setOutput( $output );
+
+			ob_start();
+			$result = $this->command->execute();
+			$outputContent = ob_get_clean();
+
+			$this->assertEquals( 0, $result );
+			$this->assertStringContainsString( "Secrets saved to: {$credentialsPath}", $outputContent );
+
+			// Should NOT have treated this as "no key found"
+			$this->assertStringNotContainsString( 'Key file not found', $outputContent );
+			$this->assertStringNotContainsString( 'Generating new encryption key', $outputContent );
+
+			// No key file should have been written - the env var was used directly
+			$this->assertFileDoesNotExist( $keyPath );
+
+			// The secrets file should still be decryptable with the real key
+			$verifyKeyPath = $this->restoreKeyFile( $key );
+			$decrypted = $secretManager->show( $credentialsPath, $verifyKeyPath );
+			$this->assertStringContainsString( 'real-secret', $decrypted );
+			unlink( $verifyKeyPath );
+		}
+		finally
+		{
+			putenv( 'NEURON_PRODUCTION_KEY' );
+		}
+	}
+
+	/**
+	 * Helper: write a key value back out to a temp file so SecretManager::show()
+	 * (which takes a keyPath, not a raw key) can be used to verify decryption.
+	 */
+	private function restoreKeyFile( string $key ): string
+	{
+		$path = sys_get_temp_dir() . '/verify_key_' . uniqid();
+		file_put_contents( $path, $key );
+		return $path;
+	}
+
+	/**
 	 * Test editor option handling with various input types
 	 */
 	public function testEditorOptionHandling(): void
