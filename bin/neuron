@@ -21,14 +21,29 @@ $autoloaderPaths = [
 	dirname( __DIR__, 4 ) . '/vendor/autoload.php',
 ];
 
+// Prefer the autoloader provided by Composer's bin proxy. When this binary is
+// symlinked (Composer path repositories / monorepo development), __DIR__ points
+// at the CLI component's own source tree, so the relative heuristics below would
+// load the wrong vendor/. The proxy exposes the consuming project's autoloader
+// via this global, which is authoritative.
 $autoloaderFound = false;
-foreach( $autoloaderPaths as $path )
+
+if( isset( $GLOBALS['_composer_autoload_path'] ) && file_exists( $GLOBALS['_composer_autoload_path'] ) )
 {
-	if( file_exists( $path ) )
+	require_once $GLOBALS['_composer_autoload_path'];
+	$autoloaderFound = true;
+}
+
+if( !$autoloaderFound )
+{
+	foreach( $autoloaderPaths as $path )
 	{
-		require_once $path;
-		$autoloaderFound = true;
-		break;
+		if( file_exists( $path ) )
+		{
+			require_once $path;
+			$autoloaderFound = true;
+			break;
+		}
 	}
 }
 
