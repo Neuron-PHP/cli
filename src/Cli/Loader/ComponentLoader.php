@@ -171,11 +171,18 @@ class ComponentLoader
 	{
 		$cwd = $this->fs->getcwd();
 
-		// Try common locations
+		// Try common locations.
+		//
+		// The current working directory's vendor is checked first: the CLI is
+		// invoked from within a consuming project, and that project's vendor is
+		// the authoritative source of installed components. This also keeps
+		// discovery correct when components are symlinked (Composer path
+		// repositories / monorepo development), where __DIR__ resolves to a
+		// component's own source tree and its stray vendor/ would otherwise win.
 		$locations = [
+			$cwd . '/vendor',          // Current project (authoritative)
 			__DIR__ . '/../../../vendor',  // When installed as dependency
 			__DIR__ . '/../../../../vendor', // When in development
-			$cwd . '/vendor',          // Current directory
 			dirname( __DIR__, 4 ) . '/vendor', // Alternative location
 		];
 
