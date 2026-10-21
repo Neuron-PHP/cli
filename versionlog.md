@@ -1,3 +1,5 @@
+## 0.8.19
+
 ## 0.8.18.1
 
 * `bin/neuron` now loads settings through `SettingManagerFactory` whenever a
