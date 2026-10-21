@@ -62,35 +62,33 @@ if( version_compare( PHP_VERSION, '8.4.0', '<' ) )
 	exit( 1 );
 }
 
-// Load configuration if available
-// Use SettingManagerFactory to load environment-specific configs and encrypted secrets
+// Load configuration.
+// SettingManagerFactory loads every layer that exists and falls back to the
+// environment for the rest:
+// - Base config (neuron.yaml)
+// - Environment-specific config (environments/{env}.yaml)
+// - Base secrets (secrets.yml.enc)
+// - Environment-specific secrets (environments/{env}.secrets.yml.enc)
+// - Environment variables (fallback)
+// Every file is optional: a container configured purely through environment
+// variables has a config/ directory with no neuron.yaml, and its settings
+// must still reach the Registry. A directory holding neuron.yaml is
+// preferred when more than one candidate exists.
 $settings = null;
-$configPaths = [
-	getcwd() . '/config',
-	getcwd(),
-];
+$configPaths = array_filter( [ getcwd() . '/config', getcwd() ], 'is_dir' );
+
+usort( $configPaths, fn( $a, $b ) => file_exists( "$b/neuron.yaml" ) <=> file_exists( "$a/neuron.yaml" ) );
 
 foreach( $configPaths as $configPath )
 {
-	$neuronYaml = $configPath . '/neuron.yaml';
-
-	if( file_exists( $neuronYaml ) )
+	try
 	{
-		try
-		{
-			// Use SettingManagerFactory to load all configuration layers:
-			// - Base config (neuron.yaml)
-			// - Environment-specific config (environments/{env}.yaml)
-			// - Base secrets (secrets.yml.enc)
-			// - Environment-specific secrets (environments/{env}.secrets.yml.enc)
-			// - .env variables (fallback)
-			$settings = \Neuron\Data\Settings\SettingManagerFactory::create( null, $configPath );
-			break;
-		}
-		catch( \Exception $e )
-		{
-			// Silently ignore config loading errors
-		}
+		$settings = \Neuron\Data\Settings\SettingManagerFactory::create( null, $configPath );
+		break;
+	}
+	catch( \Exception $e )
+	{
+		// Silently ignore config loading errors
 	}
 }
 
