@@ -1,5 +1,12 @@
 ## 0.8.18.1
 
+* `bin/neuron` now loads settings through `SettingManagerFactory` whenever a
+  `config/` directory exists, even without `neuron.yaml`. A deployment
+  configured entirely through environment variables previously reached the
+  commands with no settings in the Registry; every file layer is optional and
+  the environment is always the fallback. A directory holding `neuron.yaml`
+  is still preferred.
+
 ## 0.8.17 2026-10-04
 
 ## 0.8.16 2026-09-10
