@@ -113,6 +113,11 @@ class EditCommand extends Command
 					}
 				}
 
+				if( !is_writable( $dir ) )
+				{
+					throw new \Exception( "Cannot write to directory: {$dir}" );
+				}
+
 				$this->secretManager->generateKey( $keyPath );
 				$this->output->success( "Generated new key at: {$keyPath}" );
 				$this->output->warning( "IMPORTANT: Add {$keyPath} to .gitignore!" );

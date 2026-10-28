@@ -365,7 +365,8 @@ class EditCommandTest extends TestCase
 
 		// Create input with options pointing to the non-writable path
 		$input = new Input( [
-			'--config=' . $nonWritablePath
+			'--config=' . $nonWritablePath,
+			'--editor=echo'
 		] );
 		$input->parse( $this->command );
 
